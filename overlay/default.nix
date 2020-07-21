@@ -14,7 +14,6 @@ let
 in {
   b3sum = whenHost super.b3sum (attrs: rec {
     RUSTC_BOOTSTRAP = 1;
-    meta.platforms = super.lib.platforms.all;
   });
 
   bash = whenHost super.bash (attrs: rec {
@@ -59,7 +58,6 @@ in {
 
   ion  = super.ion.overrideAttrs (attrs: rec {
     RUSTC_BOOTSTRAP = 1;
-    meta.platforms = attrs.meta.platforms ++ super.lib.platforms.redox;
   });
 
   # gcc6 = whenTarget super.gcc6 (attrs: rec {
@@ -116,7 +114,6 @@ in {
 
   hexyl = super.hexyl.overrideAttrs (attrs: rec {
     RUSTC_BOOTSTRAP = 1;
-    meta.platforms = attrs.meta.platforms ++ super.lib.platforms.redox;
   });
 
   libiconv = whenHost super.libiconv (attrs: rec {
@@ -126,10 +123,6 @@ in {
       sha256 = "0y1ij745r4p48mxq84rax40p10ln7fc7m243p8k8sia519i3dxfc";
     };
     patches = [ ./libiconv/redox.patch ];
-  });
-
-  libpfm = whenHost super.libpfm (attrs: rec {
-    meta.platforms = attrs ++ super.lib.platforms.redox;
   });
 
   # # does not work via overlay
