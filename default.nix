@@ -9,6 +9,7 @@ in
 
 with (parentNixpkgs {
   overlays = [ overlay ];
-  crossSystem = { config = "x86_64-unknown-redox"; };
   config.allowUnsupportedSystem = true;
-}); pkgs
+}); pkgsCross.x86_64-unknown-redox // {
+  origPkgs = pkgs;
+}

@@ -7,7 +7,12 @@ Usage for example package `hexyl` (note: long build time!)
 nix-build . -A hexyl
 ```
 
-#### Packages
+To build redox-related packages for your system (rather than cross compiling):
+```bash
+nix-build . -A origPkgs.redoxfs
+```
+
+#### Cross-compiled packages
 
 Known working:
 
