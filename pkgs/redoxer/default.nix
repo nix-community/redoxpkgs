@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, rustPlatform, fuse, pkgconfig, redoxfs }:
+{ stdenv, lib, fetchFromGitHub, rustPlatform, fuse, pkgconfig, redoxfs, makeWrapper }:
 
 rustPlatform.buildRustPackage rec {
   pname   = "redoxer";
@@ -9,7 +9,7 @@ rustPlatform.buildRustPackage rec {
     rev = "186d5b26b5381e961ed05ddf6ff477c7b93da7bf";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ pkgconfig makeWrapper ];
   propagatedBuildInputs = [ fuse redoxfs ];
 
   PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
@@ -18,23 +18,13 @@ rustPlatform.buildRustPackage rec {
 
   RUSTC_BOOTSTRAP = 1;
 
-  makeWrapperArgs = [
-    "--prefix" "PATH" ":" "${stdenv.lib.makeBinPath [ redoxfs ]}"
-  ];
-
+  postInstall = ''
+    wrapProgram $out/bin/redoxer \
+      --prefix PATH : "${lib.makeBinPath [ redoxfs ]}"
+  '';
 
   meta = with stdenv.lib; {
-    changelog = "https://github.com/sharkdp/hexyl/releases/tag/v${version}";
-    description = "A command-line hex viewer";
-    longDescription = ''
-      `hexyl` is a simple hex viewer for the terminal. It uses a colored
-      output to distinguish different categories of bytes (NULL bytes,
-      printable ASCII characters, ASCII whitespace characters, other ASCII
-      characters and non-ASCII).
-    '';
-    homepage    = "https://github.com/sharkdp/hexyl";
-    license     = with licenses; [ asl20 /* or */ mit ];
-    maintainers = with maintainers; [ dywedir ];
-    platforms   = platforms.linux ++ platforms.darwin;
+    homepage    = "https://gitlab.redox-os.org/redox-os/redoxer";
+    maintainers = with maintainers; [ aaronjanse ];
   };
 }

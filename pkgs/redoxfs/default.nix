@@ -19,17 +19,7 @@ rustPlatform.buildRustPackage rec {
   RUSTC_BOOTSTRAP = 1;
 
   meta = with stdenv.lib; {
-    changelog = "https://github.com/sharkdp/hexyl/releases/tag/v${version}";
-    description = "A command-line hex viewer";
-    longDescription = ''
-      `hexyl` is a simple hex viewer for the terminal. It uses a colored
-      output to distinguish different categories of bytes (NULL bytes,
-      printable ASCII characters, ASCII whitespace characters, other ASCII
-      characters and non-ASCII).
-    '';
-    homepage    = "https://github.com/sharkdp/hexyl";
-    license     = with licenses; [ asl20 /* or */ mit ];
-    maintainers = with maintainers; [ dywedir ];
-    platforms   = platforms.linux ++ platforms.darwin;
+    homepage    = "https://gitlab.redox-os.org/redox-os/redoxfs";
+    maintainers = with maintainers; [ aaronjanse ];
   };
 }
