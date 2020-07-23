@@ -18,10 +18,15 @@ Known working:
 
 * `hexyl`
 * `binutils`
+* `bash`
 
 Known kinda working:
 
 * `vim`
+
+These compile but not yet have been tested:
+
+* `openssl`
 
 #### Cross-compilers
 

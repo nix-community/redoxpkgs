@@ -19,6 +19,14 @@ in {
   bash = whenHost super.bash (attrs: rec {
     patchFlags = [];
     patches = [ ./bash/redox.patch ];
+    configureFlags = [
+      "--disable-readline"
+      "bash_cv_getcwd_malloc=no"
+      "--without-bash-malloc"
+      "--disable-nls"
+      "bash_cv_getenv_redef=no"
+    ];
+    nativeBuildInputs = attrs.nativeBuildInputs ++ [ self.buildPackages.autoconf ];
   });
 
   binutils = whenHost super.binutils (attrs: rec {
@@ -191,12 +199,18 @@ in {
   #   ];
   # });
 
-  openssl = whenHost super.openssl (attrs: rec {
+  openssl_1_1 = whenHost (super.openssl_1_1.override {
+    static = self.stdenv.hostPlatform.isRedox;
+  }) (attrs: rec {
+    version = "1.1.0";
     src = fetchGit {
       url = "https://gitlab.redox-os.org/redox-os/openssl";
       ref = "redox";
       rev = "97449cd8763edcb3cdbd0f2465bdddd5ca9f7818";
     };
+
+    patches = [];
+    configureScript = "./Configure no-shared no-dgram redox-x86_64";
   });
 
   vim = whenHost super.vim (attrs: rec {
@@ -210,4 +224,10 @@ in {
   #     "--enable-profiler"
   #   ]) attrs.configureFlags;
   # });
+
+  ########## NEW REDOX PACKAGES ##########
+
+  redoxer = self.callPackage ../pkgs/redoxer {};
+
+  redoxfs = self.callPackage ../pkgs/redoxfs {};
 }
