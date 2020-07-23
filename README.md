@@ -32,3 +32,10 @@ These compile but not yet have been tested:
 
 * `buildPackages.gcc`
 * `buildPackages.rustc`
+
+#### Redox-related packages for local system
+
+These compile but have not yet have been tested:
+
+* `redoxfs`
+* `redoxer`
