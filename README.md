@@ -7,14 +7,18 @@ Usage for example package `hexyl` (note: long build time!)
 nix-build . -A hexyl
 ```
 
-#### Working packages
+#### Packages
 
-This is a non-exhaustive list of packages that are known to be work on Redox. 
+Known working:
 
 * `hexyl`
 * `binutils`
 
-#### Working cross-compilers
+Known kinda working:
+
+* `vim`
+
+#### Cross-compilers
 
 * `buildPackages.gcc`
 * `buildPackages.rustc`

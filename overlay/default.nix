@@ -37,6 +37,10 @@ in {
     ];
   });
 
+  coreutils = if self.stdenv.hostPlatform.isRedox
+    then self.callPackage ./coreutils {}
+    else super.coreutils;
+
   curl = whenHost super.curl (attrs: rec {
     src = fetchGit {
       url = "https://gitlab.redox-os.org/redox-os/curl";
@@ -125,6 +129,35 @@ in {
     patches = [ ./libiconv/redox.patch ];
   });
 
+  ncurses = whenHost super.ncurses (attrs: rec {
+    name = "ncurses-6.1";
+    version = "6.1";
+    src = super.fetchurl {
+      url = "https://github.com/mirror/ncurses/archive/v6.1.tar.gz";
+      sha256 = "0fzsj6rjp08y27ms58nnwhsmlza3mdsk01fk93y62b0fj99wr3mz";
+    };
+
+    configureFlags = [
+      "--enable-symlinks"
+      "--with-manpage-format=normal"
+      "--enable-pc-files"
+      "--disable-stripping"
+      "--disable-db-install"
+      "--without-ada"
+      "--without-tests"
+      "cf_cv_func_mkstemp=yes"
+    ];
+
+    postFixup = ''
+      cp -r ${super.fetchFromGitHub {
+        owner = "sajattack";
+        repo = "terminfo";
+        rev = "dc5712b13b4a4058ffca1f077167994b1764828a";
+        sha256 = "00fpjmaqx6pwmbhi79xg87l7xvadghxzl80vyccvbbn8qvx9xyij";
+      }} $out/share
+    '';
+  });
+
   # # does not work via overlay
   # llvm = whenTarget super.llvm (attrs: rec {
   #   src = fetchGit {
@@ -166,7 +199,11 @@ in {
     };
   });
 
-  redoxCoreutils = self.callPackage ./coreutils {};
+  vim = whenHost super.vim (attrs: rec {
+    patches = [
+      ./vim/redox.patch
+    ];
+  });
 
   # rustc = whenTarget super.rustc (attrs: rec {
   #   configureFlags = builtins.filter (x: !builtins.elem x [
