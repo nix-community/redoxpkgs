@@ -227,11 +227,7 @@ in {
     '';
 
     preConfigure = attrs.preConfigure + ''
-      echo "#################"
-      ls
-      pwd
       patch -p1 < ${./python3/redox.patch}
-      grep redox configure || echo "NOT FOUND"
     '';
 
     configureFlags = [
