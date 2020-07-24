@@ -213,9 +213,55 @@ in {
     configureScript = "./Configure no-shared no-dgram redox-x86_64";
   });
 
+  python37 = whenHost (super.python37.override (if self.stdenv.hostPlatform.isRedox then {
+    openssl = null;
+    gdbm = null;
+    sqlite = null;
+  } else {})) (attrs: rec {
+    LIBS = "";
+
+    postConfigure = attrs.postPatch + ''
+      sed -i 's|#define HAVE_PTHREAD_KILL 1|/* #undef HAVE_PTHREAD_KILL */|g' pyconfig.h
+      sed -i 's|#define HAVE_SCHED_SETSCHEDULER 1|/* #undef HAVE_SCHED_SETSCHEDULER */|g' pyconfig.h
+      sed -i 's|#define HAVE_SYS_RESOURCE_H 1|/* #undef HAVE_SYS_RESOURCE_H */|g' pyconfig.h
+    '';
+
+    preConfigure = attrs.preConfigure + ''
+      echo "#################"
+      ls
+      pwd
+      patch -p1 < ${./python3/redox.patch}
+      grep redox configure || echo "NOT FOUND"
+    '';
+
+    configureFlags = [
+      "--without-ensurepip"
+      "--with-system-expat"
+      "--with-system-ffi"
+      "--disable-ipv6"
+      "ac_cv_file__dev_ptmx=no"
+      "ac_cv_file__dev_ptc=no"
+      "LDFLAGS=-static"
+    ];
+  });
+
   vim = whenHost super.vim (attrs: rec {
     patches = [
       ./vim/redox.patch
+    ];
+  });
+
+  xz = whenHost super.xz (attrs: rec {
+    name = "xz-5.2.3";
+    src = super.fetchurl {
+      url = "https://tukaani.org/xz/xz-5.2.3.tar.bz2";
+      sha256 = "1ha08wxcldgcl81021x5nhknr47s1p95ljfkka4sqah5w5ns377x";
+    };
+
+    patches = [
+      ./xz/01-no-poll.patch
+      ./xz/02-o_noctty.patch
+      ./xz/03-no-signals.patch
     ];
   });
 

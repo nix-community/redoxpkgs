@@ -1,0 +1,96 @@
+diff --git a/Lib/distutils/util.py b/Lib/distutils/util.py
+index 30a21e4..80ac27e 100644
+--- a/Lib/distutils/util.py
++++ b/Lib/distutils/util.py
+@@ -131,7 +131,7 @@ def change_root (new_root, pathname):
+         if not os.path.isabs(pathname):
+             return os.path.join(new_root, pathname)
+         else:
+-            return os.path.join(new_root, pathname[1:])
++            return os.path.join(new_root, pathname.lstrip('/'))
+ 
+     elif os.name == 'nt':
+         (drive, path) = os.path.splitdrive(pathname)
+diff --git a/Modules/main.c b/Modules/main.c
+index 33aa36d..d6660ee 100644
+--- a/Modules/main.c
++++ b/Modules/main.c
+@@ -56,6 +56,16 @@ extern "C" {
+         } \
+     } while (0)
+ 
++#if defined(__redox__) && 0
++wchar_t * wcstok(wchar_t * wcs, const wchar_t * delimiters, wchar_t ** ptr) {
++    return NULL;
++}
++
++long wcstol(const wchar_t *restrict nptr, wchar_t **restrict endptr, int base) {
++    return 0;
++}
++#endif
++
+ #ifdef MS_WINDOWS
+ #define WCSTOK wcstok_s
+ #else
+diff --git a/Python/pathconfig.c b/Python/pathconfig.c
+index 3a43143..fea2deb 100644
+--- a/Python/pathconfig.c
++++ b/Python/pathconfig.c
+@@ -5,6 +5,10 @@
+ #include "internal/pystate.h"
+ #include <wchar.h>
+ 
++#if defined(__redox__)
++wchar_t * wcstok(wchar_t * wcs, const wchar_t * delimiters, wchar_t ** ptr);
++#endif
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+diff --git a/Python/pytime.c b/Python/pytime.c
+index 0e94131..6ca213c 100644
+--- a/Python/pytime.c
++++ b/Python/pytime.c
+@@ -7,6 +7,19 @@
+ #include <mach/mach_time.h>   /* mach_absolute_time(), mach_timebase_info() */
+ #endif
+ 
++#if defined(__redox__)
++int clock_getres(clockid_t clk_id, struct timespec *res) {
++    if (res) {
++        res->tv_sec = 0;
++        res->tv_nsec = 1000;
++        return 0;
++    } else {
++        errno = EFAULT;
++        return -1;
++    }
++}
++#endif
++
+ #define _PyTime_check_mul_overflow(a, b) \
+     (assert(b > 0), \
+      (_PyTime_t)(a) < _PyTime_MIN / (_PyTime_t)(b) \
+diff --git a/configure b/configure
+index 57b36e2..b07d8d7 100755
+--- a/configure
++++ b/configure
+@@ -3260,6 +3260,9 @@ then
+ 	*-*-cygwin*)
+ 		ac_sys_system=Cygwin
+ 		;;
++	*-*-redox*)
++		ac_sys_system=Redox
++		;;
+ 	*)
+ 		# for now, limit cross builds to known configurations
+ 		MACHDEP="unknown"
+@@ -3292,7 +3295,7 @@ fi
+ 
+ if test "$cross_compiling" = yes; then
+ 	case "$host" in
+-	*-*-linux*)
++	*-*-linux*|*-*-redox*)
+ 		case "$host_cpu" in
+ 		arm*)
+ 			_host_cpu=arm
