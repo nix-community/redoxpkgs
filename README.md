@@ -31,6 +31,7 @@ These compile but not yet have been tested:
 * `openssl`
 * `xz`
 * `less`
+* `sl`
 
 These compile but don't run:
 
