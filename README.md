@@ -32,6 +32,7 @@ These compile but not yet have been tested:
 * `xz`
 * `less`
 * `sl`
+* `pipes`
 
 These compile but don't run:
 
