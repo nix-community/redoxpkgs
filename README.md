@@ -19,6 +19,8 @@ Known working:
 * `hexyl`
 * `binutils`
 * `bash`
+* `cowsay`
+* `perl`
 
 Known kinda working:
 
@@ -28,6 +30,7 @@ These compile but not yet have been tested:
 
 * `openssl`
 * `xz`
+* `less`
 
 These compile but don't run:
 

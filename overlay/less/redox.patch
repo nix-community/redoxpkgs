@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index 0ce6db1..0e111a8 100755
+--- a/configure
++++ b/configure
+@@ -5117,7 +5117,7 @@ iswlower(0); iswupper(0); towlower(0); towupper(0);
+ _ACEOF
+ if ac_fn_c_try_link "$LINENO"; then :
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }; $as_echo "#define HAVE_WCTYPE 1" >>confdefs.h
++$as_echo "yes" >&6; }; $as_echo "#define HAVE_WCTYPE 0" >>confdefs.h
+
+ else
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5

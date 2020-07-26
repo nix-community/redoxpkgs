@@ -40,7 +40,7 @@ index 3a43143..fea2deb 100644
  #include "internal/pystate.h"
  #include <wchar.h>
  
-+#if defined(__redox__)
++#if defined(__redox__) && 0
 +wchar_t * wcstok(wchar_t * wcs, const wchar_t * delimiters, wchar_t ** ptr);
 +#endif
 +

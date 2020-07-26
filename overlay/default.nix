@@ -11,8 +11,14 @@ let
     then pkg.overrideAttrs fix
     else pkg;
 
+  whenAlways = pkg: fix: pkg.overrideAttrs fix;
+  
 in {
   b3sum = whenHost super.b3sum (attrs: rec {
+    RUSTC_BOOTSTRAP = 1;
+  });
+
+  bat = whenHost super.bat (attrs: rec {
     RUSTC_BOOTSTRAP = 1;
   });
 
@@ -30,8 +36,8 @@ in {
   });
 
   binutils = whenHost super.binutils (attrs: rec {
-    nativeBuildInputs = attrs.nativeBuildInputs ++ (with self; [ texinfo flex ]);
-    configureFlags = attrs.configureFlags ++ [
+    nativeBuildInputs = (with self; [ texinfo flex ]);
+    configureFlags = [
       "--disable-gdb" "--disable-nls"
     ];
     src = fetchGit {
@@ -48,6 +54,8 @@ in {
   coreutils = if self.stdenv.hostPlatform.isRedox
     then self.callPackage ./coreutils {}
     else super.coreutils;
+  
+  rcoreutils = self.callPackage ./coreutils {};
 
   curl = whenHost super.curl (attrs: rec {
     src = fetchGit {
@@ -68,7 +76,7 @@ in {
     ];
   });
 
-  ion  = super.ion.overrideAttrs (attrs: rec {
+  ion = whenHost super.ion (attrs: rec {
     RUSTC_BOOTSTRAP = 1;
   });
 
@@ -124,8 +132,12 @@ in {
     patches = [ ./gnused/redox.patch ];
   });
 
-  hexyl = super.hexyl.overrideAttrs (attrs: rec {
+  hexyl = whenHost super.hexyl (attrs: rec {
     RUSTC_BOOTSTRAP = 1;
+  });
+
+  less = whenHost super.less (attrs: rec {
+    patches = [ ./less/redox.patch ];
   });
 
   libiconv = whenHost super.libiconv (attrs: rec {
@@ -213,12 +225,52 @@ in {
     configureScript = "./Configure no-shared no-dgram redox-x86_64";
   });
 
+  perl = whenHost super.perl (attrs: rec {
+    version = "5.24.2";
+    name = "perl-${version}";
+    src = self.fetchurl {
+      url = "mirror://cpan/src/5.0/${name}.tar.gz";
+      sha256 = "1x4yj814a79lcarwb3ab6bbcb36hvb5n4ph4zg3yb0nabsjfi6v0";
+    };
+    patches = [ ./perl/redox.patch ./perl/no-sys-dirs.patch ];
+    configureFlags = [ # attrs.configureFlags ++ 
+      "--disable-mod=Sys-Syslog,Time-HiRes" "--with-libs='m'"
+      "--all-static" "--no-dynaloader"
+      "-Dldflags='-static'"
+    ];
+    postConfigure = ''
+      sed -i "s/^#define Netdb_name_t.*/#define Netdb_name_t const char*/" config.h
+      sed -i 's/#define Strerror(e).*$/#define Strerror(e) strerror(e)/' config.h
+      sed -i 's/#define L_R_TZSET.*$/#define L_R_TZSET/g' config.h
+      echo "#define HAS_VPRINTF" >> config.h
+      echo "#####################################"
+      ls
+      pwd
+      ls cpan
+      sed -i 's#.\+tzset();#//tzset();#g' cpan/Time-Piece/Piece.xs
+      sed -i 's#.\+tzset();#//tzset();#g' ext/POSIX/POSIX.xs
+    '';
+
+
+    crossVersion = "1.1.9";
+    perl-cross-src = self.fetchurl {
+      url = "https://github.com/arsv/perl-cross/archive/${crossVersion}.tar.gz";
+      sha256 = "06dngygz3j0gxvly646vsh8kr0k22k8rpz7hfnfl806070gwm8lq";
+    };
+    postUnpack = ''
+      unpackFile ${perl-cross-src}
+      cp -R perl-cross-${crossVersion}/* perl-${version}/
+    '';
+  });
+
+
   python37 = whenHost (super.python37.override (if self.stdenv.hostPlatform.isRedox then {
-    openssl = null;
+    # openssl = null;
+    ncurses = null;
     gdbm = null;
     sqlite = null;
   } else {})) (attrs: rec {
-    LIBS = "";
+    LIBS = "-l:libcrypto.a";
 
     postConfigure = attrs.postPatch + ''
       sed -i 's|#define HAVE_PTHREAD_KILL 1|/* #undef HAVE_PTHREAD_KILL */|g' pyconfig.h
@@ -229,7 +281,7 @@ in {
     preConfigure = attrs.preConfigure + ''
       patch -p1 < ${./python3/redox.patch}
     '';
-
+    
     configureFlags = [
       "--without-ensurepip"
       "--with-system-expat"
@@ -237,6 +289,7 @@ in {
       "--disable-ipv6"
       "ac_cv_file__dev_ptmx=no"
       "ac_cv_file__dev_ptc=no"
+      "--with-openssl=${self.openssl.dev}"
       "LDFLAGS=-static"
     ];
   });
@@ -267,9 +320,12 @@ in {
   #   ]) attrs.configureFlags;
   # });
 
-  ########## NEW REDOX PACKAGES ##########
+  ########## NEW REDOX PACKAGES (REDOX) ##########
+
+  orbital = self.callPackage ../pkgs/orbital {};
+
+  ########## NEW REDOX PACKAGES (LINUX) ##########
 
   redoxer = self.callPackage ../pkgs/redoxer {};
-
   redoxfs = self.callPackage ../pkgs/redoxfs {};
 }
