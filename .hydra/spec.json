@@ -1,0 +1,25 @@
+{
+  "enabled": 1,
+  "hidden": false,
+  "description": "Redox Nix packages",
+  "nixexprinput": "nixexpr",
+  "nixexprpath": ".hydra/declarative-jobsets.nix",
+  "checkinterval": 60,
+  "schedulingshares": 100,
+  "enableemail": false,
+  "emailoverride": "",
+  "keepnr": 3,
+  "type": 0,
+  "inputs": {
+    "nixexpr": {
+      "value": "https://github.com/nix-community/redoxpkgs master",
+      "type": "git",
+      "emailresponsible": false
+    },
+    "nixpkgs": {
+      "value": "https://github.com/NixOS/nixpkgs 0f920b05cbcdb8c0f3c5c4a8ea29f1f0065c7033 ",
+      "type": "git",
+      "emailresponsible": false
+    }
+  }
+}
