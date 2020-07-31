@@ -9,8 +9,6 @@ in
 with (nixpkgs {
     overlays = [ overlay ];
     config.allowUnsupportedSystem = true;
-}); pkgsCross.x86_64-unknown-redox
-
-#  pkgsCross.x86_64-unknown-redox // {
-#   origPkgs = pkgs;
-# }
+}); pkgsCross.x86_64-unknown-redox // {
+  origPkgs = pkgs;
+}
