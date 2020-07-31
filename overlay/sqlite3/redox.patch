@@ -1,0 +1,136 @@
+diff --git a/ltmain.sh b/ltmain.sh
+index a736cf9..920b295 100644
+--- a/ltmain.sh
++++ b/ltmain.sh
+@@ -7462,8 +7462,8 @@ func_mode_link ()
+     else
+       shlib_search_path=
+     fi
+-    eval sys_lib_search_path=\"$sys_lib_search_path_spec\"
+-    eval sys_lib_dlsearch_path=\"$sys_lib_dlsearch_path_spec\"
++    
++    
+ 
+     # Definition is injected by LT_CONFIG during libtool generation.
+     func_munge_path_list sys_lib_dlsearch_path "$LT_SYS_LIBRARY_PATH"
+diff --git a/shell.c b/shell.c
+index 974f57a..e07a772 100644
+--- a/shell.c
++++ b/shell.c
+@@ -30,6 +30,29 @@
+ ** This file contains code to implement the "sqlite" command line
+ ** utility for accessing SQLite databases.
+ */
++/*
++#include <sys/types.h>
++
++struct rusage {
++        struct timeval ru_utime;
++        struct timeval ru_stime;
++        long int ru_maxrss;
++        long int ru_ixrss;
++        long int ru_idrss;
++        long int ru_isrss;
++        long int ru_minflt;
++        long int ru_majflt;
++        long int ru_nswap;
++        long int ru_inblock;
++        long int ru_oublock;
++        long int ru_msgsnd;
++        long int ru_msgrcv;
++        long int ru_nsignals;
++        long int ru_nvcsw;
++        long int ru_nivcsw;
++};
++*/
++
+ #if (defined(_WIN32) || defined(WIN32)) && !defined(_CRT_SECURE_NO_WARNINGS)
+ /* This needs to come before any includes for MSVC compiler */
+ #define _CRT_SECURE_NO_WARNINGS
+@@ -259,7 +282,7 @@ static sqlite3_int64 timeOfDay(void){
+ #include <sys/resource.h>
+ 
+ /* VxWorks does not support getrusage() as far as we can determine */
+-#if defined(_WRS_KERNEL) || defined(__RTP__)
++#if defined(_WRS_KERNEL) || defined(__RTP__) || 1
+ struct rusage {
+   struct timeval ru_utime; /* user CPU time used */
+   struct timeval ru_stime; /* system CPU time used */
+diff --git a/sqlite3.c b/sqlite3.c
+index 50e2564..ce04e1c 100644
+--- a/sqlite3.c
++++ b/sqlite3.c
+@@ -22,6 +22,39 @@
+ #ifndef SQLITE_PRIVATE
+ # define SQLITE_PRIVATE static
+ #endif
++
++
++#include <sys/types.h>
++
++struct flock {
++        short int l_type;
++        short int l_whence;
++        off_t l_start;
++        off_t l_len;
++        pid_t l_pid;
++};
++
++
++struct rusage {
++	struct timeval ru_utime;
++	struct timeval ru_stime;
++	long int ru_maxrss;
++	long int ru_ixrss;
++	long int ru_idrss;
++	long int ru_isrss;
++	long int ru_minflt;
++	long int ru_majflt;
++	long int ru_nswap;
++	long int ru_inblock;
++	long int ru_oublock;
++	long int ru_msgsnd;
++	long int ru_msgrcv;
++	long int ru_nsignals;
++	long int ru_nvcsw;
++	long int ru_nivcsw;
++};
++
++
+ /************** Begin file ctime.c *******************************************/
+ /*
+ ** 2010 February 23
+@@ -33341,10 +33374,10 @@ SQLITE_PRIVATE const char *sqlite3OpcodeName(int i){
+ # define HAVE_PREAD 1
+ # define HAVE_PWRITE 1
+ #endif
+-#if defined(HAVE_PREAD64) && defined(HAVE_PWRITE64)
++#if defined(HAVE_PREAD64) && defined(HAVE_PWRITE64) && 0
+ # undef USE_PREAD
+ # define USE_PREAD64 1
+-#elif defined(HAVE_PREAD) && defined(HAVE_PWRITE)
++#elif defined(HAVE_PREAD) && defined(HAVE_PWRITE) || 1
+ # undef USE_PREAD64
+ # define USE_PREAD 1
+ #endif
+@@ -33894,9 +33927,9 @@ static struct unix_syscall {
+ #define osPread     ((ssize_t(*)(int,void*,size_t,off_t))aSyscall[9].pCurrent)
+ 
+ #if defined(USE_PREAD64)
+-  { "pread64",      (sqlite3_syscall_ptr)pread64,    0  },
++  { "pread",      (sqlite3_syscall_ptr)pread,    0  },
+ #else
+-  { "pread64",      (sqlite3_syscall_ptr)0,          0  },
++  { "pread",      (sqlite3_syscall_ptr)0,          0  },
+ #endif
+ #define osPread64 ((ssize_t(*)(int,void*,size_t,off64_t))aSyscall[10].pCurrent)
+ 
+@@ -33911,7 +33944,7 @@ static struct unix_syscall {
+ #define osPwrite    ((ssize_t(*)(int,const void*,size_t,off_t))\
+                     aSyscall[12].pCurrent)
+ 
+-#if defined(USE_PREAD64)
++#if defined(USE_PREAD64) && 0
+   { "pwrite64",     (sqlite3_syscall_ptr)pwrite64,   0  },
+ #else
+   { "pwrite64",     (sqlite3_syscall_ptr)0,          0  },
