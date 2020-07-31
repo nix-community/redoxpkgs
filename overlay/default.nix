@@ -337,8 +337,8 @@ in {
   ########## NEW REDOX PACKAGES (LINUX) ##########
 
   # redoxiso = self.callPackage ../pkgs/redoxiso {};
-  # redoxer  = self.callPackage ../pkgs/redoxer {};
-  # redoxfs  = self.callPackage ../pkgs/redoxfs {};
+  redoxer  = self.callPackage ../pkgs/redoxer {};
+  redoxfs  = self.callPackage ../pkgs/redoxfs {};
 
   ########## NEW REDOX PACKAGES (FOR REDOX ISO BUILDING) ##########
 
