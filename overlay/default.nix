@@ -40,9 +40,12 @@ in {
     configureFlags = [
       "--disable-gdb" "--disable-nls"
     ];
-    src = fetchGit {
-      url = "https://gitlab.redox-os.org/redox-os/binutils-gdb";
+    src = self.fetchFromGitLab {
+      domain = "gitlab.redox-os.org";
+      owner = "redox-os";
+      repo = "binutils-gdb";
       rev = "692afe7cc2d41134d08e5c487ddad125d5aaec5e";
+      sha256 = "0vngaqvpd1f7clx07rw4m5aqabxqbxsy5jp7056gn19xb9wr9yvw";
     };
     patches = [
       ./binutils/deterministic.patch
@@ -51,16 +54,19 @@ in {
     ];
   });
 
-  coreutils = if self.stdenv.hostPlatform.isRedox
-    then self.callPackage ./coreutils {}
-    else super.coreutils;
+  # coreutils = if self.stdenv.hostPlatform.isRedox
+  #   then self.callPackage ./coreutils {}
+  #   else super.coreutils;
   
   rcoreutils = self.callPackage ./coreutils {};
 
   curl = whenHost super.curl (attrs: rec {
-    src = fetchGit {
-      url = "https://gitlab.redox-os.org/redox-os/curl";
+    src = self.fetchFromGitLab {
+      domain = "gitlab.redox-os.org";
+      owner = "redox-os";
+      repo = "curl";
       rev = "1c5963a79ba69bc332865dfbfc2cddc7e545dc80";
+      sha256 = "16y2137j2z6niw9jjspb252k2wrgl8yj43p0rki74qqahlvzv0p9";
     };
     preConfigure = ''
       sed -e 's|/usr/bin|/no-such-path|g' -i.bak configure
@@ -215,10 +221,12 @@ in {
     static = self.stdenv.hostPlatform.isRedox;
   }) (attrs: rec {
     version = "1.1.0";
-    src = fetchGit {
-      url = "https://gitlab.redox-os.org/redox-os/openssl";
-      ref = "redox";
+    src = self.fetchFromGitLab {
+      domain = "gitlab.redox-os.org";
+      owner = "redox-os";
+      repo = "openssl";
       rev = "97449cd8763edcb3cdbd0f2465bdddd5ca9f7818";
+      sha256 = "1z6w7ck5wxmyf17yi7y7jd1givxba8rl6hanciz7f159nrdw89fj";
     };
 
     patches = [];
@@ -294,10 +302,12 @@ in {
     ];
   });
 
+  sqlite = whenHost super.sqlite (attrs: rec {
+    patches = [ ./sqlite3/redox.patch ];
+  });
+
   vim = whenHost super.vim (attrs: rec {
-    patches = [
-      ./vim/redox.patch
-    ];
+    patches = [ ./vim/redox.patch ];
   });
 
   xz = whenHost super.xz (attrs: rec {
@@ -326,6 +336,24 @@ in {
 
   ########## NEW REDOX PACKAGES (LINUX) ##########
 
-  redoxer = self.callPackage ../pkgs/redoxer {};
-  redoxfs = self.callPackage ../pkgs/redoxfs {};
+  # redoxiso = self.callPackage ../pkgs/redoxiso {};
+  # redoxer  = self.callPackage ../pkgs/redoxer {};
+  # redoxfs  = self.callPackage ../pkgs/redoxfs {};
+
+  ########## NEW REDOX PACKAGES (FOR REDOX ISO BUILDING) ##########
+
+  
+
+  # redoxPkgs = let
+  #   redoxBinaryRustPlatform = self.callPackage ../pkgs/redox-binary-rustplatform {};
+  # in {
+  #   drivers   = self.callPackage ../pkgs/redox-drivers {
+  #     # rustPlatform = redoxBinaryRustPlatform;
+  #   };
+  #   init      = self.callPackage ../pkgs/redox-init {};
+  #   installer = self.callPackage ../pkgs/redox-installer {};
+  #   nulld     = self.callPackage ../pkgs/redox-nulld {};
+  #   ramfs     = self.callPackage ../pkgs/redox-ramfs {};
+  #   randd     = self.callPackage ../pkgs/redox-randd {};
+  # };
 }
