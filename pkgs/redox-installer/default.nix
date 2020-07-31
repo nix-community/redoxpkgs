@@ -9,7 +9,7 @@ rustPlatform.buildRustPackage rec {
     owner = "redox-os";
     repo = "redoxfs";
     rev = "0068a6d4980e83e36c2f08fd64e4809da5ce136c";
-    sha256 = "000wm8kczdg6dzrladlvymsa9m501wl2q08irhabyvzafn98m1j8";
+    sha256 = "1apwm8kczdg6dzrladlvymsa9m501wl2q08irhabyvzafn98m1j8";
   };
 
   nativeBuildInputs = [ pkgconfig ];
@@ -24,6 +24,6 @@ rustPlatform.buildRustPackage rec {
   meta = with stdenv.lib; {
     homepage    = "https://gitlab.redox-os.org/redox-os/redoxfs";
     maintainers = with maintainers; [ aaronjanse ];
-    platforms = platforms.linux ++ platforms.redox;
+    platforms = platforms.linux;
   };
 }

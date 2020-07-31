@@ -1,0 +1,394 @@
+diff --git a/nvmed/src/scheme.rs b/nvmed/src/scheme.rs
+index aabec03..980f9ff 100644
+--- a/nvmed/src/scheme.rs
++++ b/nvmed/src/scheme.rs
+@@ -424,12 +424,12 @@ impl SchemeBlockMut for DiskScheme {
+         }
+     }
+
+-    fn seek(&mut self, id: usize, pos: usize, whence: usize) -> Result<Option<usize>> {
++    fn seek(&mut self, id: usize, pos: isize, whence: usize) -> Result<Option<isize>> {
+         match *self.handles.get_mut(&id).ok_or(Error::new(EBADF))? {
+             Handle::List(ref mut handle, ref mut size) => {
+                 let len = handle.len() as usize;
+                 *size = match whence {
+-                    SEEK_SET => cmp::min(len, pos),
++                    SEEK_SET => cmp::min(len, pos.try_into().unwrap()),
+                     SEEK_CUR => {
+                         cmp::max(0, cmp::min(len as isize, *size as isize + pos as isize)) as usize
+                     }
+@@ -439,13 +439,13 @@ impl SchemeBlockMut for DiskScheme {
+                     _ => return Err(Error::new(EINVAL)),
+                 };
+
+-                Ok(Some(*size))
++                Ok(Some((*size).try_into().unwrap()))
+             }
+             Handle::Disk(number, ref mut size) => {
+                 let disk = self.disks.get_mut(&number).ok_or(Error::new(EBADF))?;
+                 let len = (disk.as_ref().blocks * disk.as_ref().block_size) as usize;
+                 *size = match whence {
+-                    SEEK_SET => cmp::min(len, pos),
++                    SEEK_SET => cmp::min(len, pos.try_into().unwrap()),
+                     SEEK_CUR => {
+                         cmp::max(0, cmp::min(len as isize, *size as isize + pos as isize)) as usize
+                     }
+@@ -455,7 +455,7 @@ impl SchemeBlockMut for DiskScheme {
+                     _ => return Err(Error::new(EINVAL)),
+                 };
+
+-                Ok(Some(*size))
++                Ok(Some((*size).try_into().unwrap()))
+             }
+             Handle::Partition(disk_num, part_num, ref mut size) => {
+                 let disk = self.disks.get_mut(&disk_num).ok_or(Error::new(EBADF))?;
+@@ -470,7 +470,7 @@ impl SchemeBlockMut for DiskScheme {
+                 let len = (part.size * disk.as_ref().block_size) as usize;
+
+                 *size = match whence {
+-                    SEEK_SET => cmp::min(len, pos),
++                    SEEK_SET => cmp::min(len, pos.try_into().unwrap()),
+                     SEEK_CUR => {
+                         cmp::max(0, cmp::min(len as isize, *size as isize + pos as isize)) as usize
+                     }
+@@ -480,7 +480,7 @@ impl SchemeBlockMut for DiskScheme {
+                     _ => return Err(Error::new(EINVAL)),
+                 };
+
+-                Ok(Some(*size))
++                Ok(Some((*size).try_into().unwrap()))
+             }
+         }
+     }
+diff --git a/ahcid/src/ahci/hba.rs b/ahcid/src/ahci/hba.rs
+index 86764ec..6fb268b 100644
+--- a/ahcid/src/ahci/hba.rs
++++ b/ahcid/src/ahci/hba.rs
+@@ -75,7 +75,7 @@ impl HbaPort {
+ 
+     pub fn start(&mut self) {
+         while self.cmd.readf(HBA_PORT_CMD_CR) {
+-            unsafe { asm!("pause"); }
++            unsafe { llvm_asm!("pause"); }
+         }
+ 
+         self.cmd.writef(HBA_PORT_CMD_FRE | HBA_PORT_CMD_ST, true);
+@@ -85,7 +85,7 @@ impl HbaPort {
+         self.cmd.writef(HBA_PORT_CMD_ST, false);
+ 
+         while self.cmd.readf(HBA_PORT_CMD_FR | HBA_PORT_CMD_CR) {
+-            unsafe { asm!("pause"); }
++            unsafe { llvm_asm!("pause"); }
+         }
+ 
+         self.cmd.writef(HBA_PORT_CMD_FRE, false);
+@@ -305,7 +305,7 @@ impl HbaPort {
+             }
+ 
+             while self.tfd.readf((ATA_DEV_BUSY | ATA_DEV_DRQ) as u32) {
+-                unsafe { asm!("pause"); }
++                unsafe { llvm_asm!("pause"); }
+             }
+ 
+             self.ci.writef(1 << slot, true);
+@@ -325,7 +325,7 @@ impl HbaPort {
+ 
+     pub fn ata_stop(&mut self, slot: u32) -> Result<()> {
+         while self.ata_running(slot) {
+-            unsafe { asm!("pause"); }
++            unsafe { llvm_asm!("pause"); }
+         }
+ 
+         self.stop();
+diff --git a/ahcid/src/main.rs b/ahcid/src/main.rs
+index 513cf81..2b98e6d 100644
+--- a/ahcid/src/main.rs
++++ b/ahcid/src/main.rs
+@@ -1,4 +1,4 @@
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ extern crate syscall;
+ extern crate byteorder;
+diff --git a/alxd/src/main.rs b/alxd/src/main.rs
+index 4d0ac6c..0165894 100644
+--- a/alxd/src/main.rs
++++ b/alxd/src/main.rs
+@@ -1,7 +1,7 @@
+ #![allow(dead_code)]
+ #![allow(non_upper_case_globals)]
+ #![allow(unused_parens)]
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ #![feature(concat_idents)]
+ 
+ extern crate event;
+diff --git a/e1000d/src/main.rs b/e1000d/src/main.rs
+index a1f9433..e622201 100644
+--- a/e1000d/src/main.rs
++++ b/e1000d/src/main.rs
+@@ -1,4 +1,4 @@
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ extern crate event;
+ extern crate netutils;
+diff --git a/ihdad/src/main.rs b/ihdad/src/main.rs
+index 6e7543c..77e0cdf 100755
+--- a/ihdad/src/main.rs
++++ b/ihdad/src/main.rs
+@@ -1,5 +1,5 @@
+ //#![deny(warnings)]
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ extern crate bitflags;
+ extern crate spin;
+diff --git a/pcid/src/lib.rs b/pcid/src/lib.rs
+index e03e5bf..bddde59 100644
+--- a/pcid/src/lib.rs
++++ b/pcid/src/lib.rs
+@@ -1,6 +1,6 @@
+ //! Interface to `pcid`.
+ 
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ mod driver_interface;
+ mod pci;
+diff --git a/pcid/src/main.rs b/pcid/src/main.rs
+index 249f75a..47cc363 100644
+--- a/pcid/src/main.rs
++++ b/pcid/src/main.rs
+@@ -1,4 +1,4 @@
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ use std::fs::{File, metadata, read_dir};
+ use std::io::prelude::*;
+diff --git a/pcid/src/pci/mod.rs b/pcid/src/pci/mod.rs
+index 3307c85..4f8dcd7 100644
+--- a/pcid/src/pci/mod.rs
++++ b/pcid/src/pci/mod.rs
+@@ -1,3 +1,5 @@
++#![feature(llvm_asm)]
++
+ use std::convert::TryFrom;
+ use std::sync::{Mutex, Once};
+ 
+@@ -72,7 +74,7 @@ impl CfgAccess for Pci {
+         let address = Self::address(bus, dev, func, offset);
+ 
+         let value: u32;
+-        asm!("mov dx, 0xCF8
++        llvm_asm!("mov dx, 0xCF8
+               out dx, eax
+               mov dx, 0xCFC
+               in eax, dx"
+@@ -91,10 +93,10 @@ impl CfgAccess for Pci {
+         let offset = u8::try_from(offset).expect("offset too large for PCI 3.0 configuration space");
+         let address = Self::address(bus, dev, func, offset);
+ 
+-        asm!("mov dx, 0xCF8
++        llvm_asm!("mov dx, 0xCF8
+               out dx, eax"
+              : : "{eax}"(address) : "dx" : "intel", "volatile");
+-        asm!("mov dx, 0xCFC
++        llvm_asm!("mov dx, 0xCFC
+               out dx, eax"
+              : : "{eax}"(value) : "dx" : "intel", "volatile");
+     }
+diff --git a/pcid/src/pcie/mod.rs b/pcid/src/pcie/mod.rs
+index 453aef8..af9a6e2 100644
+--- a/pcid/src/pcie/mod.rs
++++ b/pcid/src/pcie/mod.rs
+@@ -2,7 +2,7 @@ use std::{fmt, fs, io, mem, ptr, slice};
+ use std::collections::BTreeMap;
+ use std::sync::{Arc, Mutex};
+ 
+-use syscall::flag::PhysmapFlags;
++use syscall::flag::{PHYSMAP_NO_CACHE, PHYSMAP_WRITE};
+ use syscall::io::Dma;
+ 
+ use smallvec::SmallVec;
+@@ -173,7 +173,7 @@ impl Pcie {
+         };
+         let mut maps_lock = self.maps.lock().unwrap();
+         let virt_pointer = maps_lock.entry((bus, dev, func)).or_insert_with(|| {
+-            syscall::physmap(base_address_phys as usize + Self::addr_offset_in_bytes(starting_bus, bus, dev, func, 0), 4096, PhysmapFlags::PHYSMAP_NO_CACHE | PhysmapFlags::PHYSMAP_WRITE).unwrap_or_else(|error| panic!("failed to physmap pcie configuration space for {:2x}:{:2x}.{:2x}: {:?}", bus, dev, func, error)) as *mut u32
++            syscall::physmap(base_address_phys as usize + Self::addr_offset_in_bytes(starting_bus, bus, dev, func, 0), 4096, PHYSMAP_NO_CACHE | PHYSMAP_WRITE).unwrap_or_else(|error| panic!("failed to physmap pcie configuration space for {:2x}:{:2x}.{:2x}: {:?}", bus, dev, func, error)) as *mut u32
+         });
+         f(Some(&mut *virt_pointer.offset((offset as usize / mem::size_of::<u32>()) as isize)))
+     }
+diff --git a/ps2d/src/main.rs b/ps2d/src/main.rs
+index 8d00348..0b3ae6a 100644
+--- a/ps2d/src/main.rs
++++ b/ps2d/src/main.rs
+@@ -1,4 +1,4 @@
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ #[macro_use]
+ extern crate bitflags;
+diff --git a/ps2d/src/vm.rs b/ps2d/src/vm.rs
+index 36dc9dc..be4b0ab 100644
+--- a/ps2d/src/vm.rs
++++ b/ps2d/src/vm.rs
+@@ -33,7 +33,7 @@ pub unsafe fn cmd(cmd: u32, arg: u32) -> (u32, u32, u32, u32, u32, u32) {
+     let si: u32;
+     let di: u32;
+ 
+-    asm!(
++    llvm_asm!(
+         "in eax, dx"
+         :
+         "={eax}"(a),
+diff --git a/rtl8168d/src/device.rs b/rtl8168d/src/device.rs
+index a1b19c4..3245cbe 100644
+--- a/rtl8168d/src/device.rs
++++ b/rtl8168d/src/device.rs
+@@ -163,7 +163,7 @@ impl SchemeBlockMut for Rtl8168 {
+                 self.regs.tppoll.writef(1 << 6, true); //Notify of normal priority packet
+ 
+                 while self.regs.tppoll.readf(1 << 6) {
+-                    unsafe { asm!("pause"); }
++                    unsafe { llvm_asm!("pause"); }
+                 }
+ 
+                 self.transmit_i += 1;
+@@ -171,7 +171,7 @@ impl SchemeBlockMut for Rtl8168 {
+                 return Ok(Some(i));
+             }
+ 
+-            unsafe { asm!("pause"); }
++            unsafe { llvm_asm!("pause"); }
+         }
+     }
+ 
+@@ -293,7 +293,7 @@ impl Rtl8168 {
+         println!("  - Reset");
+         self.regs.cmd.writef(1 << 4, true);
+         while self.regs.cmd.readf(1 << 4) {
+-            asm!("pause");
++            llvm_asm!("pause");
+         }
+ 
+         // Set up rx buffers
+diff --git a/rtl8168d/src/main.rs b/rtl8168d/src/main.rs
+index 277c968..0d143ab 100644
+--- a/rtl8168d/src/main.rs
++++ b/rtl8168d/src/main.rs
+@@ -1,4 +1,4 @@
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ extern crate event;
+ extern crate netutils;
+diff --git a/vesad/src/display.rs b/vesad/src/display.rs
+index 1b4f2cb..5af6935 100644
+--- a/vesad/src/display.rs
++++ b/vesad/src/display.rs
+@@ -1,7 +1,7 @@
+ #[cfg(feature="rusttype")]
+ extern crate rusttype;
+ 
+-use std::alloc::{Alloc, Global, Layout};
++use std::alloc::{System, GlobalAlloc, Layout};
+ use std::{cmp, slice};
+ use std::ptr::NonNull;
+ 
+@@ -42,7 +42,7 @@ impl Display {
+     #[cfg(not(feature="rusttype"))]
+     pub fn new(width: usize, height: usize, onscreen: usize) -> Display {
+         let size = width * height;
+-        let offscreen = unsafe { Global.alloc(Layout::from_size_align_unchecked(size * 4, 4096)).unwrap().as_ptr() };
++        let offscreen = unsafe { System.alloc(Layout::from_size_align_unchecked(size * 4, 4096)) };
+         unsafe { fast_set64(offscreen as *mut u64, 0, size/2) };
+         Display {
+             width: width,
+@@ -55,7 +55,7 @@ impl Display {
+     #[cfg(feature="rusttype")]
+     pub fn new(width: usize, height: usize, onscreen: usize) -> Display {
+         let size = width * height;
+-        let offscreen = unsafe { Global.alloc(Layout::from_size_align_unchecked(size * 4, 4096)).unwrap().as_ptr() };
++        let offscreen = unsafe { System.alloc(Layout::from_size_align_unchecked(size * 4, 4096)) };
+         unsafe { fast_set64(offscreen as *mut u64, 0, size/2) };
+         Display {
+             width: width,
+@@ -74,7 +74,7 @@ impl Display {
+             println!("Resize display to {}, {}", width, height);
+ 
+             let size = width * height;
+-            let offscreen = unsafe { Global.alloc(Layout::from_size_align_unchecked(size * 4, 4096)).unwrap().as_ptr() };
++            let offscreen = unsafe { System.alloc(Layout::from_size_align_unchecked(size * 4, 4096)) };
+ 
+             {
+                 let mut old_ptr = self.offscreen.as_ptr();
+@@ -107,7 +107,7 @@ impl Display {
+             let onscreen = self.onscreen.as_mut_ptr();
+             self.onscreen = unsafe { slice::from_raw_parts_mut(onscreen, size) };
+ 
+-            unsafe { Global.dealloc(NonNull::new_unchecked(self.offscreen.as_mut_ptr() as *mut u8), Layout::from_size_align_unchecked(self.offscreen.len() * 4, 4096)) };
++            unsafe { System.dealloc(self.offscreen.as_mut_ptr() as *mut u8, Layout::from_size_align_unchecked(self.offscreen.len() * 4, 4096)) };
+             self.offscreen = unsafe { slice::from_raw_parts_mut(offscreen as *mut u32, size) };
+         } else {
+             println!("Display is already {}, {}", width, height);
+@@ -276,6 +276,6 @@ impl Display {
+ 
+ impl Drop for Display {
+     fn drop(&mut self) {
+-        unsafe { Global.dealloc(NonNull::new_unchecked(self.offscreen.as_mut_ptr() as *mut u8), Layout::from_size_align_unchecked(self.offscreen.len() * 4, 4096)) };
++        unsafe { System.dealloc(self.offscreen.as_mut_ptr() as *mut u8, Layout::from_size_align_unchecked(self.offscreen.len() * 4, 4096)) };
+     }
+ }
+diff --git a/vesad/src/main.rs b/vesad/src/main.rs
+index e9fe865..1b78fe7 100644
+--- a/vesad/src/main.rs
++++ b/vesad/src/main.rs
+@@ -1,5 +1,5 @@
+ #![feature(allocator_api)]
+-#![feature(asm)]
++#![feature(llvm_asm)]
+ 
+ extern crate orbclient;
+ extern crate syscall;
+diff --git a/vesad/src/primitive.rs b/vesad/src/primitive.rs
+index 16c2536..519fd3a 100644
+--- a/vesad/src/primitive.rs
++++ b/vesad/src/primitive.rs
+@@ -2,7 +2,7 @@
+ #[inline(always)]
+ #[cold]
+ pub unsafe fn fast_copy(dst: *mut u8, src: *const u8, len: usize) {
+-    asm!("cld
++    llvm_asm!("cld
+         rep movsb"
+         :
+         : "{rdi}"(dst as usize), "{rsi}"(src as usize), "{rcx}"(len)
+@@ -14,7 +14,7 @@ pub unsafe fn fast_copy(dst: *mut u8, src: *const u8, len: usize) {
+ #[inline(always)]
+ #[cold]
+ pub unsafe fn fast_copy64(dst: *mut u64, src: *const u64, len: usize) {
+-    asm!("cld
++    llvm_asm!("cld
+         rep movsq"
+         :
+         : "{rdi}"(dst as usize), "{rsi}"(src as usize), "{rcx}"(len)
+@@ -26,7 +26,7 @@ pub unsafe fn fast_copy64(dst: *mut u64, src: *const u64, len: usize) {
+ #[inline(always)]
+ #[cold]
+ pub unsafe fn fast_set32(dst: *mut u32, src: u32, len: usize) {
+-    asm!("cld
++    llvm_asm!("cld
+         rep stosd"
+         :
+         : "{rdi}"(dst as usize), "{eax}"(src), "{rcx}"(len)
+@@ -38,7 +38,7 @@ pub unsafe fn fast_set32(dst: *mut u32, src: u32, len: usize) {
+ #[inline(always)]
+ #[cold]
+ pub unsafe fn fast_set64(dst: *mut u64, src: u64, len: usize) {
+-    asm!("cld
++    llvm_asm!("cld
+         rep stosq"
+         :
+         : "{rdi}"(dst as usize), "{rax}"(src), "{rcx}"(len)
