@@ -1,7 +1,7 @@
 let
   nixpkgs = import (fetchGit {
     url = "https://github.com/NixOS/nixpkgs";
-    rev = "5c56778efdcaa1b8088eb536c3f1e9cc110930dc";
+    rev = "64a9b4b7a341c7f423932bf8f4366f07654060e6";
   });
   overlay = import ./overlay;
 in
