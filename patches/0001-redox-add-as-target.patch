@@ -1,0 +1,317 @@
+From 60fd049b6552d73a5162109e7d8aa0839b54c398 Mon Sep 17 00:00:00 2001
+From: Aaron Janse <aaron@ajanse.me>
+Date: Tue, 21 Jul 2020 13:11:36 -0700
+Subject: [PATCH] redox: add as target
+
+---
+ lib/systems/default.nix                       |  2 ++
+ lib/systems/doubles.nix                       |  3 ++
+ lib/systems/examples.nix                      |  9 ++++++
+ lib/systems/inspect.nix                       |  3 +-
+ lib/systems/parse.nix                         |  3 ++
+ lib/tests/systems.nix                         |  7 ++--
+ pkgs/development/compilers/gcc/6/default.nix  | 13 +++++---
+ pkgs/development/compilers/rust/rustc.nix     |  2 +-
+ pkgs/development/libraries/relibc/default.nix | 32 +++++++++++++++++++
+ pkgs/stdenv/cross/default.nix                 |  4 +--
+ pkgs/top-level/all-packages.nix               | 17 ++++++++--
+ 11 files changed, 81 insertions(+), 14 deletions(-)
+ create mode 100644 pkgs/development/libraries/relibc/default.nix
+
+diff --git a/lib/systems/default.nix b/lib/systems/default.nix
+index 210674cc639..c929781dd8f 100644
+--- a/lib/systems/default.nix
++++ b/lib/systems/default.nix
+@@ -32,6 +32,7 @@ rec {
+         /**/ if final.isDarwin              then "libSystem"
+         else if final.isMinGW               then "msvcrt"
+         else if final.isWasi                then "wasilibc"
++        else if final.isRedox               then "relibc"
+         else if final.isMusl                then "musl"
+         else if final.isUClibc              then "uclibc"
+         else if final.isAndroid             then "bionic"
+@@ -65,6 +66,7 @@ rec {
+           freebsd = "FreeBSD";
+           openbsd = "OpenBSD";
+           wasi = "Wasi";
++          redox = "Redox";
+           genode = "Genode";
+         }.${final.parsed.kernel.name} or null;
+ 
+diff --git a/lib/systems/doubles.nix b/lib/systems/doubles.nix
+index a839b3d3d57..c0e78595d85 100644
+--- a/lib/systems/doubles.nix
++++ b/lib/systems/doubles.nix
+@@ -22,6 +22,8 @@ let
+ 
+     "wasm64-wasi" "wasm32-wasi"
+ 
++    "x86_64-redox"
++
+     "powerpc64le-linux"
+ 
+     "riscv32-linux" "riscv64-linux"
+@@ -69,6 +71,7 @@ in {
+   openbsd = filterDoubles predicates.isOpenBSD;
+   unix    = filterDoubles predicates.isUnix;
+   wasi    = filterDoubles predicates.isWasi;
++  redox   = filterDoubles predicates.isRedox;
+   windows = filterDoubles predicates.isWindows;
+   genode  = filterDoubles predicates.isGenode;
+ 
+diff --git a/lib/systems/examples.nix b/lib/systems/examples.nix
+index 19b3790ecbe..ca562d2e456 100644
+--- a/lib/systems/examples.nix
++++ b/lib/systems/examples.nix
+@@ -163,6 +163,15 @@ rec {
+     libc = "newlib";
+   };
+ 
++  #
++  # Redox
++  #
++
++  x86_64-unknown-redox = {
++    config = "x86_64-unknown-redox";
++    libc = "relibc";
++  };
++
+   #
+   # Darwin
+   #
+diff --git a/lib/systems/inspect.nix b/lib/systems/inspect.nix
+index 90a1fb6d80c..8fa63057250 100644
+--- a/lib/systems/inspect.nix
++++ b/lib/systems/inspect.nix
+@@ -33,7 +33,7 @@ rec {
+ 
+     isBSD          = { kernel = { families = { inherit (kernelFamilies) bsd; }; }; };
+     isDarwin       = { kernel = { families = { inherit (kernelFamilies) darwin; }; }; };
+-    isUnix         = [ isBSD isDarwin isLinux isSunOS isCygwin ];
++    isUnix         = [ isBSD isDarwin isLinux isSunOS isCygwin isRedox ];
+ 
+     isMacOS        = { kernel = kernels.macos; };
+     isiOS          = { kernel = kernels.ios; };
+@@ -46,6 +46,7 @@ rec {
+     isCygwin       = { kernel = kernels.windows; abi = abis.cygnus; };
+     isMinGW        = { kernel = kernels.windows; abi = abis.gnu; };
+     isWasi         = { kernel = kernels.wasi; };
++    isRedox        = { kernel = kernels.redox; };
+     isGhcjs        = { kernel = kernels.ghcjs; };
+     isGenode       = { kernel = kernels.genode; };
+     isNone         = { kernel = kernels.none; };
+diff --git a/lib/systems/parse.nix b/lib/systems/parse.nix
+index 648e7c27024..6bd44a00746 100644
+--- a/lib/systems/parse.nix
++++ b/lib/systems/parse.nix
+@@ -277,6 +277,7 @@ rec {
+     openbsd = { execFormat = elf;     families = { inherit bsd; }; };
+     solaris = { execFormat = elf;     families = { }; };
+     wasi    = { execFormat = wasm;    families = { }; };
++    redox   = { execFormat = elf;     families = { }; };
+     windows = { execFormat = pe;      families = { }; };
+     ghcjs   = { execFormat = unknown; families = { }; };
+     genode  = { execFormat = elf;     families = { }; };
+@@ -390,6 +391,8 @@ rec {
+         then { cpu = elemAt l 0; vendor = elemAt l 1; kernel = "windows";                    }
+       else if (elemAt l 2 == "wasi")
+         then { cpu = elemAt l 0; vendor = elemAt l 1; kernel = "wasi";                       }
++      else if (elemAt l 2 == "redox")
++        then { cpu = elemAt l 0; vendor = elemAt l 1; kernel = "redox";                      }
+       else if hasPrefix "netbsd" (elemAt l 2)
+         then { cpu = elemAt l 0; vendor = elemAt l 1;    kernel = elemAt l 2;                }
+       else if (elem (elemAt l 2) ["eabi" "eabihf" "elf"])
+diff --git a/lib/tests/systems.nix b/lib/tests/systems.nix
+index ea6e337937f..ea8ceedd43f 100644
+--- a/lib/tests/systems.nix
++++ b/lib/tests/systems.nix
+@@ -12,22 +12,23 @@ let
+     expected = lib.sort lib.lessThan y;
+   };
+ in with lib.systems.doubles; lib.runTests {
+-  testall = mseteq all (linux ++ darwin ++ freebsd ++ openbsd ++ netbsd ++ illumos ++ wasi ++ windows ++ embedded ++ js ++ genode);
++  testall = mseteq all (linux ++ darwin ++ freebsd ++ openbsd ++ netbsd ++ illumos ++ wasi ++ windows ++ embedded ++ js ++ genode ++ redox);
+ 
+   testarm = mseteq arm [ "armv5tel-linux" "armv6l-linux" "armv6l-none" "armv7a-linux" "armv7l-linux" "arm-none" "armv7a-darwin" ];
+   testi686 = mseteq i686 [ "i686-linux" "i686-freebsd" "i686-netbsd" "i686-openbsd" "i686-cygwin" "i686-windows" "i686-none" "i686-darwin" ];
+   testmips = mseteq mips [ "mipsel-linux" ];
+-  testx86_64 = mseteq x86_64 [ "x86_64-linux" "x86_64-darwin" "x86_64-freebsd" "x86_64-genode" "x86_64-openbsd" "x86_64-netbsd" "x86_64-cygwin" "x86_64-solaris" "x86_64-windows" "x86_64-none" ];
++  testx86_64 = mseteq x86_64 [ "x86_64-linux" "x86_64-darwin" "x86_64-freebsd" "x86_64-genode" "x86_64-redox" "x86_64-openbsd" "x86_64-netbsd" "x86_64-cygwin" "x86_64-solaris" "x86_64-windows" "x86_64-none" ];
+ 
+   testcygwin = mseteq cygwin [ "i686-cygwin" "x86_64-cygwin" ];
+   testdarwin = mseteq darwin [ "x86_64-darwin" "i686-darwin" "aarch64-darwin" "armv7a-darwin" ];
+   testfreebsd = mseteq freebsd [ "i686-freebsd" "x86_64-freebsd" ];
+   testgenode = mseteq genode [ "aarch64-genode" "x86_64-genode" ];
++  testredox = mseteq redox [ "x86_64-redox" ];
+   testgnu = mseteq gnu (linux /* ++ kfreebsd ++ ... */);
+   testillumos = mseteq illumos [ "x86_64-solaris" ];
+   testlinux = mseteq linux [ "aarch64-linux" "armv5tel-linux" "armv6l-linux" "armv7a-linux" "armv7l-linux" "i686-linux" "mipsel-linux" "riscv32-linux" "riscv64-linux" "x86_64-linux" "powerpc64le-linux" ];
+   testnetbsd = mseteq netbsd [ "i686-netbsd" "x86_64-netbsd" ];
+   testopenbsd = mseteq openbsd [ "i686-openbsd" "x86_64-openbsd" ];
+   testwindows = mseteq windows [ "i686-cygwin" "x86_64-cygwin" "i686-windows" "x86_64-windows" ];
+-  testunix = mseteq unix (linux ++ darwin ++ freebsd ++ openbsd ++ netbsd ++ illumos ++ cygwin);
++  testunix = mseteq unix (linux ++ darwin ++ freebsd ++ openbsd ++ netbsd ++ illumos ++ cygwin ++ redox);
+ }
+diff --git a/pkgs/development/compilers/gcc/6/default.nix b/pkgs/development/compilers/gcc/6/default.nix
+index f1bc490bd77..8e3f9634717 100644
+--- a/pkgs/development/compilers/gcc/6/default.nix
++++ b/pkgs/development/compilers/gcc/6/default.nix
+@@ -64,9 +64,9 @@ let majorVersion = "6";
+ 
+     inherit (stdenv) buildPlatform hostPlatform targetPlatform;
+ 
+-    patches =
+-      [ ../use-source-date-epoch.patch ./0001-Fix-build-for-glibc-2.31.patch ]
+-      ++ optional (targetPlatform != hostPlatform) ../libstdc++-target.patch
++    patches = optionals (!stdenv.targetPlatform.isRedox) [
++      ../use-source-date-epoch.patch ./0001-Fix-build-for-glibc-2.31.patch
++    ] ++ optional (targetPlatform != hostPlatform) ../libstdc++-target.patch
+       ++ optional noSysDirs ../no-sys-dirs.patch
+       ++ optional langAda ../gnat-cflags.patch
+       ++ optional langFortran ../gfortran-driving.patch
+@@ -120,6 +120,11 @@ stdenv.mkDerivation ({
+     repo = "gcc-vc4";
+     rev = "e90ff43f9671c760cf0d1dd62f569a0fb9bf8918";
+     sha256 = "0gxf66hwqk26h8f853sybphqa5ca0cva2kmrw5jsiv6139g0qnp8";
++  } else if stdenv.targetPlatform.isRedox then fetchFromGitHub {
++    owner = "redox-os";
++    repo = "gcc";
++    rev = "f360ac095028d286fc6dde4d02daed48f59813fa"; # `redox` branch
++    sha256 = "1an96h8l58pppyh3qqv90g8hgcfd9hj7igvh2gigmkxbrx94khfl";
+   } else fetchurl {
+     url = "mirror://gnu/gcc/gcc-${version}/gcc-${version}.tar.xz";
+     sha256 = "0i89fksfp6wr1xg9l8296aslcymv2idn60ip31wr9s4pwin7kwby";
+@@ -182,7 +187,7 @@ stdenv.mkDerivation ({
+   nativeBuildInputs = [ texinfo which gettext ]
+     ++ (optional (perl != null) perl)
+     ++ (optional javaAwtGtk pkgconfig)
+-    ++ (optional (stdenv.targetPlatform.isVc4) flex);
++    ++ (optional (with stdenv.targetPlatform; isVc4 || isRedox) flex);
+ 
+   # For building runtime libs
+   depsBuildTarget =
+diff --git a/pkgs/development/compilers/rust/rustc.nix b/pkgs/development/compilers/rust/rustc.nix
+index 40de5f61e03..734a94f7690 100644
+--- a/pkgs/development/compilers/rust/rustc.nix
++++ b/pkgs/development/compilers/rust/rustc.nix
+@@ -90,7 +90,7 @@ in stdenv.mkDerivation rec {
+     "${setBuild}.llvm-config=${llvmSharedForBuild}/bin/llvm-config"
+     "${setHost}.llvm-config=${llvmSharedForHost}/bin/llvm-config"
+     "${setTarget}.llvm-config=${llvmSharedForTarget}/bin/llvm-config"
+-  ] ++ optionals stdenv.isLinux [
++  ] ++ optionals (stdenv.isLinux && !stdenv.targetPlatform.isRedox) [
+     "--enable-profiler" # build libprofiler_builtins
+   ];
+ 
+diff --git a/pkgs/development/libraries/relibc/default.nix b/pkgs/development/libraries/relibc/default.nix
+new file mode 100644
+index 00000000000..a1787ce24bb
+--- /dev/null
++++ b/pkgs/development/libraries/relibc/default.nix
+@@ -0,0 +1,32 @@
++{ stdenvNoCC, buildPackages, fetchurl }:
++
++stdenvNoCC.mkDerivation {
++  name = "binary-relibc-latest";
++
++  # snapshot of https://static.redox-os.org/toolchain/x86_64-unknown-redox/relibc-install.tar.gz
++  src = fetchurl {
++    name = "relibc-install.tar.gz";
++    url = "https://gateway.pinata.cloud/ipfs/QmNp6fPTjPA6LnCYvW1UmbAHcPpU7tqZhstfSpSXMJCRwp";
++    sha256 = "1hjdzrj67jdag3pm8h2dqh6xipbfxr6f4navdra6q1h83gl7jkd9";
++  };
++
++  # to avoid "unpacker produced multiple directories"
++  unpackPhase = "unpackFile $src";
++
++  dontBuild = true;
++  dontPatchELF = true;
++  dontStrip = true;
++  installPhase = ''
++    mkdir $out/
++    cp -r x86_64-unknown-redox/* $out/
++    rm -rf $out/bin
++  '';
++
++  meta = with stdenvNoCC.lib; {
++    homepage = "https://gitlab.redox-os.org/redox-os/relibc";
++    description = "C Library in Rust for Redox and Linux";
++    license = licenses.mit;
++    maintainers = [ maintainers.aaronjanse ];
++    platforms = platforms.redox;
++  };
++}
+diff --git a/pkgs/stdenv/cross/default.nix b/pkgs/stdenv/cross/default.nix
+index cc49af7de3b..0f575289889 100644
+--- a/pkgs/stdenv/cross/default.nix
++++ b/pkgs/stdenv/cross/default.nix
+@@ -38,7 +38,7 @@ in lib.init bootStages ++ [
+   (buildPackages: {
+     inherit config;
+     overlays = overlays ++ crossOverlays
+-      ++ (if crossSystem.isWasm then [(import ../../top-level/static.nix)] else []);
++      ++ (if (with crossSystem; isWasm || isRedox) then [(import ../../top-level/static.nix)] else []);
+     selfBuild = false;
+     stdenv = buildPackages.stdenv.override (old: rec {
+       buildPlatform = localSystem;
+@@ -72,7 +72,7 @@ in lib.init bootStages ++ [
+              (hostPlatform.isLinux && !buildPlatform.isLinux)
+              [ buildPackages.patchelf ]
+         ++ lib.optional
+-             (let f = p: !p.isx86 || p.libc == "musl" || p.libc == "wasilibc" || p.isiOS; in f hostPlatform && !(f buildPlatform))
++             (let f = p: !p.isx86 || builtins.elem p.libc [ "musl" "wasilibc" "relibc" ] || p.isiOS; in f hostPlatform && !(f buildPlatform))
+              buildPackages.updateAutotoolsGnuConfigScriptsHook
+            # without proper `file` command, libtool sometimes fails
+            # to recognize 64-bit DLLs
+diff --git a/pkgs/top-level/all-packages.nix b/pkgs/top-level/all-packages.nix
+index 57004afa7bd..928a2be113e 100644
+--- a/pkgs/top-level/all-packages.nix
++++ b/pkgs/top-level/all-packages.nix
+@@ -8349,8 +8349,12 @@ in
+   gerbil-support = callPackage ../development/compilers/gerbil/gerbil-support.nix { };
+   gerbilPackages-unstable = gerbil-support.gerbilPackages-unstable; # NB: don't recurseIntoAttrs for (unstable!) libraries
+ 
+-  gccFun = callPackage (if stdenv.targetPlatform.isVc4 then ../development/compilers/gcc/6 else ../development/compilers/gcc/9);
+-  gcc = if stdenv.targetPlatform.isVc4 then gcc6 else gcc9;
++  gccFun = callPackage (if (with stdenv.targetPlatform; isVc4 || libc == "relibc")
++    then ../development/compilers/gcc/6
++    else ../development/compilers/gcc/9);
++  gcc = if (with stdenv.targetPlatform; isVc4 || libc == "relibc")
++    then gcc6 else gcc9;
++  
+   gcc-unwrapped = gcc.cc;
+ 
+   gccStdenv = if stdenv.cc.isGNU then stdenv else stdenv.override {
+@@ -8485,7 +8489,11 @@ in
+     libcCross = if stdenv.targetPlatform != stdenv.buildPlatform then libcCross else null;
+     threadsCross = if stdenv.targetPlatform != stdenv.buildPlatform then threadsCross else null;
+ 
+-    isl = if !stdenv.isDarwin then isl_0_14 else null;
++    isl = if stdenv.isDarwin
++            then null
++          else if stdenv.targetPlatform.isRedox
++            then isl_0_17
++          else isl_0_14;
+   }));
+ 
+   gcc7 = lowPrio (wrapCC (callPackage ../development/compilers/gcc/7 {
+@@ -12137,6 +12145,7 @@ in
+     else if name == "libSystem" then targetPackages.darwin.xcode
+     else if name == "nblibc" then targetPackages.netbsdCross.libc
+     else if name == "wasilibc" then targetPackages.wasilibc or wasilibc
++    else if name == "relibc" then targetPackages.relibc or relibc
+     else if stdenv.targetPlatform.isGhcjs then null
+     else throw "Unknown libc ${name}";
+ 
+@@ -12151,6 +12160,8 @@ in
+     stdenv = crossLibcStdenv;
+   };
+ 
++  relibc = callPackage ../development/libraries/relibc { };
++
+   # Only supported on Linux, using glibc
+   glibcLocales = if stdenv.hostPlatform.libc == "glibc" then callPackage ../development/libraries/glibc/locales.nix { } else null;
+ 
+-- 
+2.25.0
+

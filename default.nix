@@ -1,14 +1,28 @@
 let
-  nixpkgs = import (fetchGit {
-    url = "https://github.com/NixOS/nixpkgs";
-    rev = "64a9b4b7a341c7f423932bf8f4366f07654060e6";
-  });
-  overlay = import ./overlay;
-in
+  # This is the nixpkgs commit used by the branch aaronjanse/aj-redox
+  nixpkgs = builtins.fetchTarball {
+    url = "https://github.com/nixos/nixpkgs/archive/903a0cac04a10ca50ca461e2fad127d05b7f1419.tar.gz";
+    sha256 = "1kb5h8dkkmz1a2hxncvr9k5ni79fasn6r8ny740vx6iyvpcxfnnq";
+  };
 
-with (nixpkgs {
+  upstreamPkgs = import nixpkgs {};
+
+  # This nixpkgs is then patched to support the redox target
+  # Patches are comming from the branch aaronjanse/aj-redox
+  nixpkgsPatched = upstreamPkgs.stdenv.mkDerivation {
+    name = "nixpkgs-patched";
+    src = nixpkgs;
+    patches = [ ./patches/0001-redox-add-as-target.patch ];
+    installPhase = "cp -r ./ $out/";
+    fixupPhase = ":";
+  };
+  overlay = import ./overlay;
+  pkgs = import nixpkgsPatched {
     overlays = [ overlay ];
     config.allowUnsupportedSystem = true;
-}); pkgsCross.x86_64-unknown-redox // {
+  };
+in
+
+pkgs.pkgsCross.x86_64-unknown-redox // {
   origPkgs = pkgs;
 }
