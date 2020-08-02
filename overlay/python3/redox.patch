@@ -94,3 +94,45 @@ index 57b36e2..b07d8d7 100755
  		case "$host_cpu" in
  		arm*)
  			_host_cpu=arm
+diff --git a/Python/fileutils.c b/Python/fileutils.c
+index b2c634d..27447ba 100644
+--- a/Python/fileutils.c
++++ b/Python/fileutils.c
+@@ -581,10 +581,10 @@ encode_current_locale(const wchar_t *text, char **str,
+             else {
+                 buf[0] = c;
+                 if (bytes != NULL) {
+-                    converted = wcstombs(bytes, buf, size);
++                    converted = 0;
+                 }
+                 else {
+-                    converted = wcstombs(NULL, buf, 0);
++                    converted = 0;
+                 }
+                 if (converted == (size_t)-1) {
+                     goto encode_error;
+@@ -598,6 +598,7 @@ encode_current_locale(const wchar_t *text, char **str,
+                 }
+             }
+         }
++        size = len;
+         if (result != NULL) {
+             *bytes = '\0';
+             break;
+@@ -1249,11 +1250,11 @@ _Py_wfopen(const wchar_t *path, const wchar_t *mode)
+ #ifndef MS_WINDOWS
+     char *cpath;
+     char cmode[10];
+-    size_t r;
+-    r = wcstombs(cmode, mode, 10);
+-    if (r == (size_t)-1 || r >= 10) {
+-        errno = EINVAL;
+-        return NULL;
++    for(int i = 0; i < 10; i++) {
++        cmode[i] = mode[i];
++        if (mode[i] == NULL) {
++            break;
++        }
+     }
+     cpath = _Py_EncodeLocaleRaw(path, NULL);
+     if (cpath == NULL) {

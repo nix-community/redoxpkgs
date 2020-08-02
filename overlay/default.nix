@@ -54,6 +54,8 @@ in {
     ];
   });
 
+  pwd = self.callPackage ./pwd {};
+
   # coreutils = if self.stdenv.hostPlatform.isRedox
   #   then self.callPackage ./coreutils {}
   #   else super.coreutils;
@@ -231,9 +233,18 @@ in {
 
     patches = [];
     configureScript = "./Configure no-shared no-dgram redox-x86_64";
+    postPatch = ''
+      patchShebangs Configure
+      substituteInPlace crypto/async/arch/async_posix.h \
+        --replace '!defined(__ANDROID__) && !defined(__OpenBSD__)' \
+                  '!defined(__ANDROID__) && !defined(__OpenBSD__) && 0'
+    '';
   });
 
-  perl = whenHost super.perl (attrs: rec {
+  perl = whenHost (if self.stdenv.hostPlatform.isRedox
+      then super.perl.override { coreutils = self.pwd; }
+      else super.perl
+  ) (attrs: rec {
     version = "5.24.2";
     name = "perl-${version}";
     src = self.fetchurl {
@@ -251,10 +262,6 @@ in {
       sed -i 's/#define Strerror(e).*$/#define Strerror(e) strerror(e)/' config.h
       sed -i 's/#define L_R_TZSET.*$/#define L_R_TZSET/g' config.h
       echo "#define HAS_VPRINTF" >> config.h
-      echo "#####################################"
-      ls
-      pwd
-      ls cpan
       sed -i 's#.\+tzset();#//tzset();#g' cpan/Time-Piece/Piece.xs
       sed -i 's#.\+tzset();#//tzset();#g' ext/POSIX/POSIX.xs
     '';
@@ -280,15 +287,20 @@ in {
   } else {})) (attrs: rec {
     LIBS = "-l:libcrypto.a";
 
+    preConfigure = attrs.preConfigure + ''
+      patch -p1 < ${./python3/redox.patch}
+    '';
+
     postConfigure = attrs.postPatch + ''
       sed -i 's|#define HAVE_PTHREAD_KILL 1|/* #undef HAVE_PTHREAD_KILL */|g' pyconfig.h
       sed -i 's|#define HAVE_SCHED_SETSCHEDULER 1|/* #undef HAVE_SCHED_SETSCHEDULER */|g' pyconfig.h
       sed -i 's|#define HAVE_SYS_RESOURCE_H 1|/* #undef HAVE_SYS_RESOURCE_H */|g' pyconfig.h
     '';
 
-    preConfigure = attrs.preConfigure + ''
-      patch -p1 < ${./python3/redox.patch}
-    '';
+    makeFlags = [
+      "LDFLAGS=-static"
+      "LINKFORSHARED="
+    ];
     
     configureFlags = [
       "--without-ensurepip"
@@ -299,6 +311,7 @@ in {
       "ac_cv_file__dev_ptc=no"
       "--with-openssl=${self.openssl.dev}"
       "LDFLAGS=-static"
+      "--disable-shared"
     ];
   });
 

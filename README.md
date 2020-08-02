@@ -25,6 +25,7 @@ Known working:
 Known kinda working:
 
 * `vim`
+* `python37`
 
 These compile but not yet have been tested:
 
