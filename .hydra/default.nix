@@ -1,5 +1,6 @@
 let
   pkgs = import ../default.nix;
 in {
-  inherit (pkgs.buildPackages) rustc;
+  inherit (pkgs.buildPackages) gcc rustc;
+  inherit (pkgs) hexyl bash less;
 }
