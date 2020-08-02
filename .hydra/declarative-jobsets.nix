@@ -9,7 +9,7 @@ let
       checkinterval = "60";
       enabled = "1";
       nixexprinput = "expr";
-      nixexprpath = "default.nix";
+      nixexprpath = ".hydra/default.nix";
       schedulingshares = 100;
       enableemail = false;
       emailoverride = "";
