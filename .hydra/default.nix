@@ -1,12 +1,12 @@
 let
   pkgs = import ../default.nix;
 in {
-  inherit (pkgs.buildPackages) gcc rustc;
-  inherit (pkgs)
+  inherit (pkgsCross.x86_64-unknown-redox.buildPackages) gcc rustc;
+  inherit (pkgsCross.x86_64-unknown-redox)
     hexyl bash less vim
     perl cmatrix cowsay
     binutils-unwrapped
-    llvm SDL2 pcre ncurses
-    rcoreutils python37
+    SDL2 pcre ncurses
+    # llvm rcoreutils python37
   ;
 }
