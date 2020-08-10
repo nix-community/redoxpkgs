@@ -1,0 +1,71 @@
+diff --git a/configure.ac b/configure.ac
+index 1bd0fd6..1ea6eed 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -201,7 +201,7 @@ case "$THREADS" in
+       *-*-aix* | *-*-android* | *-*-cygwin* | *-*-darwin* | *-*-dragonfly* | \
+       *-*-freebsd* | *-*-haiku* | *-*-hpux11* | *-*-irix* | \
+       *-*-kfreebsd*-gnu | *-*-gnu* | *-*-*linux* | *-*-nacl* | \
+-      *-*-netbsd* | *-*-openbsd* | *-*-osf* | *-*-solaris*)
++      *-*-netbsd* | *-*-openbsd* | *-*-osf* | *-*-solaris* | *-redox*)
+         AC_DEFINE(GC_THREADS)
+         AC_DEFINE([_REENTRANT], [1],
+                   [Required define if using POSIX threads.])
+diff --git a/dyn_load.c b/dyn_load.c
+index 1fc9308..5576a13 100644
+--- a/dyn_load.c
++++ b/dyn_load.c
+@@ -62,7 +62,7 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;
+     && !(defined(NETBSD) && defined(__ELF__)) \
+     && !defined(HAIKU) && !defined(HURD) \
+     && !(defined(OPENBSD) && (defined(__ELF__) || defined(M68K))) \
+-    && !defined(CPPCHECK)
++    && !defined(CPPCHECK) && 0
+ # error We only know how to find data segments of dynamic libraries for above.
+ # error Additional SVR4 variants might not be too hard to add.
+ #endif
+diff --git a/include/private/gcconfig.h b/include/private/gcconfig.h
+index 348255d..6246f56 100644
+--- a/include/private/gcconfig.h
++++ b/include/private/gcconfig.h
+@@ -697,6 +697,10 @@ EXTERN_C_BEGIN
+ #   define mach_type_known
+ # endif
+
++
++#    define X86_64
++#    define mach_type_known
++
+ /* Feel free to add more clauses here */
+
+ /* Or manually define the machine type here.  A machine type is         */
+@@ -2581,7 +2585,7 @@ EXTERN_C_BEGIN
+ #   endif
+ # endif
+
+-# ifdef X86_64
++# if 1
+ #   define MACH_TYPE "X86_64"
+ #   ifdef __ILP32__
+ #     define ALIGNMENT 4
+@@ -2622,7 +2626,7 @@ EXTERN_C_BEGIN
+ #       define DATAEND ((ptr_t)(&_end))
+ #       define DYNAMIC_LOADING
+ #   endif
+-#   ifdef LINUX
++#   if 1
+ #       define OS_TYPE "LINUX"
+ #       define LINUX_STACKBOTTOM
+ #       if !defined(GC_LINUX_THREADS) || !defined(REDIRECT_MALLOC)
+diff --git a/os_dep.c b/os_dep.c
+index f0c3eae..6cbc42e 100644
+--- a/os_dep.c
++++ b/os_dep.c
+@@ -3009,7 +3009,7 @@ GC_API GC_push_other_roots_proc GC_CALL GC_get_push_other_roots(void)
+ # elif !defined(USE_WINALLOC)
+ #   include <sys/mman.h>
+ #   include <signal.h>
+-#   if !defined(CYGWIN32) && !defined(HAIKU)
++#   if !defined(CYGWIN32) && !defined(HAIKU) && 0
+ #     include <sys/syscall.h>
+ #   endif

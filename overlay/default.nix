@@ -54,6 +54,11 @@ in {
     ];
   });
 
+  boehmgc = whenHost super.boehmgc (attrs: rec {
+    patches = attrs.patches ++ [ ./boehmgc/redox.patch ];
+    nativeBuildInputs = [ self.buildPackages.autoreconfHook ];
+  });
+
   pwd = self.callPackage ./pwd {};
 
   # coreutils = if self.stdenv.hostPlatform.isRedox
@@ -157,6 +162,58 @@ in {
     patches = [ ./libiconv/redox.patch ];
   });
 
+  mesa = whenHost (if self.stdenv.hostPlatform.isRedox then super.mesa.override {
+    enableOSMesa = true;
+  } else super.mesa) (attrs: rec {
+    src = self.fetchFromGitLab {
+      domain = "gitlab.redox-os.org";
+      owner = "redox-os";
+      repo = "mesa";
+      rev = "18e42435d4e4951fac5b2f02ef701354d9f0cc2f";
+      sha256 = "1dvr1x2ckyq4gwvchkmzhpzd3xbj7wc2qcigb6d39i2ikvs2066s";
+    };
+    nativeBuildInputs = with super.buildPackages; [
+      pkgconfig autoreconfHook
+      intltool bison flex file
+      python3Packages.python python3Packages.Mako zlib
+      llvm
+    ];
+    # preConfigure = ''
+    #   NOCONFIGURE=1 ./autogen.sh
+    # '';
+    configureFlags = [
+        "--disable-dri"
+        "--disable-dri3"
+        "--disable-driglx-direct"
+        "--disable-egl"
+        "--disable-glx"
+        "--disable-gbm"
+        "--disable-llvm-shared-libs"
+        "--disable-shared"
+        "--enable-llvm"
+        "--enable-gallium-osmesa"
+        "--enable-static"
+        "--with-gallium-drivers=swrast"
+        "--with-platforms=surfaceless"
+    ];
+    # mesonFlags = [
+    #   "-Ddri-drivers="
+    #   "-Dplatforms=surfaceless,haiku"
+    #   "-Ddri3=false"
+    #   "-Dgallium-drivers=swrast"
+    #   "-Dvulkan-drivers="
+    #   "-Dglx=disabled"
+    #   # "-Dosmesa=gallium"
+    #   "-Degl=false"
+    #   "-Dgbm=false"
+    # ];
+    patches = [];
+    propagatedBuildInputs = [];
+    buildInputs = with self; [
+      expat llvm zlib openssl libiconv zlib
+    ];
+  });
+
   ncurses = whenHost super.ncurses (attrs: rec {
     name = "ncurses-6.1";
     version = "6.1";
@@ -219,6 +276,70 @@ in {
   #   ];
   # });
 
+  llvm = whenHost (if self.stdenv.hostPlatform.isRedox then super.llvm_8.override {
+    enablePFM = false;
+    enableSharedLibraries = false;
+    enablePolly = false;
+  } else super.llvm) (attrs: rec {
+    akjdhasd = true;
+    src = fetchGit {
+      url = "https://gitlab.redox-os.org/redox-os/llvm-project.git";
+      ref = "redox";
+      rev = "bfcfaebc0faa6bcbed692b7997a144de464c4604";
+    };
+    unpackPhase = "";
+    patches = [];
+    prePatch = ''
+      for x in $(ls -a | grep -v '^\.\.\?$' | grep -v '^llvm$'); do
+        rm -rf $x;
+      done
+      mv llvm/* .
+    '';
+    doCheck = false;
+    dontCheck = true;
+    checkTarget = "";
+    cmakeFlags = with self; [
+        "-DCMAKE_BUILD_TYPE=Release"
+        "-DCMAKE_CROSSCOMPILING=True"
+        "-DCMAKE_CXX_FLAGS=--std=gnu++11"
+        "-DCMAKE_EXE_LINKER_FLAGS=-static"
+        # "-DCMAKE_INSTALL_PREFIX=/"
+        "-DCMAKE_SYSTEM_NAME=Generic"
+        # "-DCROSS_TOOLCHAIN_FLAGS_NATIVE="-DCMAKE_TOOLCHAIN_FILE=$native"
+        "-DLLVM_BUILD_BENCHMARKS=Off"
+        "-DLLVM_BUILD_EXAMPLES=Off"
+        "-DLLVM_BUILD_TESTS=Off"
+        "-DLLVM_BUILD_UTILS=Off"
+        # "-DLLVM_DEFAULT_TARGET_TRIPLE="$HOST"
+        "-DLLVM_ENABLE_LTO=Off"
+        "-DLLVM_ENABLE_RTTI=On"
+        "-DLLVM_ENABLE_THREADS=On"
+        "-DLLVM_INCLUDE_BENCHMARKS=Off"
+        "-DLLVM_INCLUDE_EXAMPLES=Off"
+        "-DLLVM_INCLUDE_TESTS=Off"
+        "-DLLVM_INCLUDE_UTILS=Off"
+        "-DLLVM_OPTIMIZED_TABLEGEN=On"
+        "-DLLVM_TABLEGEN=${buildPackages.llvm_8}/bin/llvm-tblgen"
+        #"-DLLVM_TABLEGEN="/usr/bin/llvm-tblgen-8"
+        # "-DLLVM_TARGET_ARCH="$ARCH"
+        "-DLLVM_TARGETS_TO_BUILD=X86"
+        "-DLLVM_TOOL_LLVM_COV_BUILD=Off"
+        "-DLLVM_TOOL_LLVM_LTO_BUILD=Off"
+        "-DLLVM_TOOL_LLVM_LTO2_BUILD=Off"
+        "-DLLVM_TOOL_LLVM_PROFDATA_BUILD=Off"
+        "-DLLVM_TOOL_LLVM_RTDYLD_BUILD=Off"
+        "-DLLVM_TOOL_LLVM_XRAY_BUILD=Off"
+        "-DLLVM_TOOL_LLI_BUILD=Off"
+        "-DLLVM_TOOL_LTO_BUILD=Off"
+        # "-DPYTHON_EXECUTABLE="/usr/bin/python2"
+        "-DUNIX=1"
+        "-DBUILD_SHARED_LIBS=Off"
+        # "-target="$HOST"
+        # "-I"$sysroot/include"
+        "-Wno-dev"
+    ];
+  });
+
   openssl_1_1 = whenHost (super.openssl_1_1.override {
     static = self.stdenv.hostPlatform.isRedox;
   }) (attrs: rec {
@@ -239,6 +360,16 @@ in {
         --replace '!defined(__ANDROID__) && !defined(__OpenBSD__)' \
                   '!defined(__ANDROID__) && !defined(__OpenBSD__) && 0'
     '';
+  });
+
+  pcre = whenHost super.pcre (attrs: rec {
+    name = "pcre-8.42";
+    src = self.fetchurl {
+      url = "https://ftp.pcre.org/pub/pcre/pcre-8.42.tar.bz2";
+      sha256 = "00ckpzlgyr16bnqx8fawa3afjgqxw5yxgs2l081vw23qi1y4pl1c";
+    };
+    doCheck = false;
+    patches = attrs.patches ++ [ ./pcre/redox.patch ];
   });
 
   perl = whenHost (if self.stdenv.hostPlatform.isRedox
@@ -315,6 +446,20 @@ in {
     ];
   });
 
+  SDL2 = whenHost (if self.stdenv.hostPlatform.isRedox then super.SDL2.override {
+    x11Support = false;
+    # openglSupport = true;
+  } else super.SDL2) (attrs: rec {
+    buildInputs = attrs.buildInputs ++ [ self.redoxPkgs.liborbital self.mesa ];
+    src = self.fetchFromGitLab {
+      domain = "gitlab.redox-os.org";
+      owner = "fabiao";
+      repo = "sdl2-src";
+      rev = "d50d35f09b2aee3ec86b986cc243878549d20791";
+      sha256 = "0qlxl1y2wq4rsaqlzmm7db8shng7w9n6qlmy0vdv0sypv8kamgsx";
+    };
+  });
+
   sqlite = whenHost super.sqlite (attrs: rec {
     patches = [ ./sqlite3/redox.patch ];
   });
@@ -357,16 +502,16 @@ in {
 
   
 
-  # redoxPkgs = let
-  #   redoxBinaryRustPlatform = self.callPackage ../pkgs/redox-binary-rustplatform {};
-  # in {
-  #   drivers   = self.callPackage ../pkgs/redox-drivers {
-  #     # rustPlatform = redoxBinaryRustPlatform;
-  #   };
-  #   init      = self.callPackage ../pkgs/redox-init {};
-  #   installer = self.callPackage ../pkgs/redox-installer {};
-  #   nulld     = self.callPackage ../pkgs/redox-nulld {};
-  #   ramfs     = self.callPackage ../pkgs/redox-ramfs {};
-  #   randd     = self.callPackage ../pkgs/redox-randd {};
-  # };
+  redoxPkgs = let
+    redoxBinaryRustPlatform = self.callPackage ../pkgs/redox-binary-rustplatform {};
+  in {
+    drivers   = self.callPackage ../pkgs/redox-drivers {};
+    init      = self.callPackage ../pkgs/redox-init {};
+    # installer = self.callPackage ../pkgs/redox-installer {};
+    nulld     = self.callPackage ../pkgs/redox-nulld {};
+    ramfs     = self.callPackage ../pkgs/redox-ramfs {};
+    randd     = self.callPackage ../pkgs/redox-randd {};
+
+    liborbital = self.callPackage ../pkgs/redox-liborbital {};
+  };
 }

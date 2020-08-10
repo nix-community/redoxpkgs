@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
+{ stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig, SDL2 }:
 
 rustPlatform.buildRustPackage rec {
   pname   = "redox-drivers";
@@ -8,22 +8,24 @@ rustPlatform.buildRustPackage rec {
     domain = "gitlab.redox-os.org";
     owner = "redox-os";
     repo = "drivers";
-    rev = "a16604fc2cb78238317ed80a780c51875e321d51";
-    sha256 = "000wm8kczdg6dzrladlvymsa9m501wl2q08irhabyvzafn98m1j8";
+    rev = "be101621cce424712ecd304de4096b2167857158";
+    sha256 = "1900mz90hl608404zk903qy6i9mv1nkzh1krz68w1gvf6xxd2a2d";
   };
+
+  buildInputs = [ SDL2 ];
 
   # nativeBuildInputs = [ pkgconfig ];
   # propagatedBuildInputs = [ fuse ];
 
   # PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
 
-  cargoSha256 = "00rdpykcvcrgy6s5qi6v7sw4j3ihbz3w4jfavxxaqsbjdhp52ys1";
+  cargoSha256 = "14zh6cm0fdmpsc1snl8lppy1knvqyw3qwzza1riry0dyg3snykbr";
 
-  patches = [ ./fix-asm.patch ];
+  # patches = [ ./fix-asm.patch ];
 
-  cargoPatches = [
-    ./fix-Cargo.lock.patch
-  ];
+  # cargoPatches = [
+  #   ./fix-Cargo.lock.patch
+  # ];
 
   RUSTC_BOOTSTRAP = 1;
 

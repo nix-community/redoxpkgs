@@ -1,15 +1,15 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-init";
+  pname   = "redox-liborbital";
   version = "latest";
 
   src = fetchFromGitLab {
     domain = "gitlab.redox-os.org";
     owner = "redox-os";
-    repo = "init";
-    rev = "ec060cca50781c2536ce89c666a410502535747b";
-    sha256 = "1y1cn5n5ybgm46kf2crp2qkwkf420xsg5djkxcfyyjh13calsw6b";
+    repo = "liborbital";
+    rev = "73c4fe9b7f17a086235162d729f7a8afbc0d6730";
+    sha256 = "157kfdwbadxwzrsi2scr2qsnlhnkfrpsqqjxs3l75jp4bicgxgv1";
   };
 
   # nativeBuildInputs = [ pkgconfig ];
@@ -17,14 +17,14 @@ rustPlatform.buildRustPackage rec {
 
   # PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
 
-  cargoSha256 = "10n58cwil9njqjyxwka1k54fk0r1cwngaarnnz7lbrgf8d4nhml3";
+  cargoSha256 = "0v41z1ms11x54sfq7mm91l64j2hy251i5paz07r772lrw3wbvn42";
 
-  # cargoBuildFlags = [ "lto" ];
+  # cargoBuildFlags = [ "-C lto" ];
 
   RUSTC_BOOTSTRAP = 1;
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/init";
+    homepage    = "https://gitlab.redox-os.org/redox-os/randd";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

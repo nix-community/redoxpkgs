@@ -4,7 +4,7 @@ Redoxpkgs is an overlay to allow using Nix to cross-compile packages to [Redox](
 
 Usage for example package `hexyl` (note: long build time!)
 ```bash
-nix-build . -A hexyl
+nix-build . -A pkgsCross.x86_64-unknown-redox.hexyl
 ```
 
 To build redox-related packages for your system (rather than cross compiling):
