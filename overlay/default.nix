@@ -282,10 +282,12 @@ in {
     enablePolly = false;
   } else super.llvm) (attrs: rec {
     akjdhasd = true;
-    src = fetchGit {
-      url = "https://gitlab.redox-os.org/redox-os/llvm-project.git";
-      ref = "redox";
+    src = self.fetchFromGitLab {
+      domain = "gitlab.redox-os.org";
+      owner = "redox-os";
+      repo = "llvm-project";
       rev = "bfcfaebc0faa6bcbed692b7997a144de464c4604";
+      sha256 = "0whym4c2a7vrai9cc912f80csn0kqj0ydpvgsw8gzv65fz5lavni";
     };
     unpackPhase = "";
     patches = [];
