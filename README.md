@@ -35,10 +35,6 @@ These compile but not yet have been tested:
 * `sl`
 * `pipes`
 
-These compile but don't run:
-
-* `python37`
-
 #### Cross-compilers
 
 * `buildPackages.gcc`

@@ -7,6 +7,6 @@ in {
     perl cmatrix cowsay
     binutils-unwrapped
     llvm SDL2 pcre ncurses
-    rcoreutils
+    rcoreutils python37
   ;
 }
