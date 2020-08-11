@@ -178,9 +178,8 @@ in {
       python3Packages.python python3Packages.Mako zlib
       llvm
     ];
-    # preConfigure = ''
-    #   NOCONFIGURE=1 ./autogen.sh
-    # '';
+    LDFLAGS="--static -L${self.buildPackages.gcc.cc}/x86_64-unknown-redox/lib";
+    LLVM_LDFLAGS="--static";
     configureFlags = [
         "--disable-dri"
         "--disable-dri3"
@@ -196,6 +195,7 @@ in {
         "--with-gallium-drivers=swrast"
         "--with-platforms=surfaceless"
     ];
+    makeFlags = [ "V=1" ];
     # mesonFlags = [
     #   "-Ddri-drivers="
     #   "-Dplatforms=surfaceless,haiku"
