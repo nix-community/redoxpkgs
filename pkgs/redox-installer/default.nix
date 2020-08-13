@@ -1,15 +1,15 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redoxfs";
-  version = "0.4.0";
+  pname   = "installer";
+  version = "latest";
 
   src = fetchFromGitLab {
     domain = "gitlab.redox-os.org";
     owner = "redox-os";
-    repo = "redoxfs";
-    rev = "0068a6d4980e83e36c2f08fd64e4809da5ce136c";
-    sha256 = "1apwm8kczdg6dzrladlvymsa9m501wl2q08irhabyvzafn98m1j8";
+    repo = "installer";
+    rev = "150d65c31ba05c829ba239a3febe1e44b6e512e8";
+    sha256 = "1zpfyix6prdy0dl19gx7k5xy6wyc9cslhkc2rk7igknxnjgv4414";
   };
 
   nativeBuildInputs = [ pkgconfig ];
@@ -17,7 +17,7 @@ rustPlatform.buildRustPackage rec {
 
   PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
 
-  cargoSha256 = "1wpv8mamv0f5rc5j3z1xc2sfvd3zh4zm11kwi4my2klfw3x37rlp";
+  cargoSha256 = "0j9z0s4fiv1y0q3dz3ns5amq5r3yjnl8a82474zb8ndbrmkzvj4s";
 
   RUSTC_BOOTSTRAP = 1;
 

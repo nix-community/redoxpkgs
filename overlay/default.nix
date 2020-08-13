@@ -89,10 +89,6 @@ in {
     ];
   });
 
-  ion = whenHost super.ion (attrs: rec {
-    RUSTC_BOOTSTRAP = 1;
-  });
-
   # gcc6 = whenTarget super.gcc6 (attrs: rec {
   #   src = fetchGit {
   #     url = https://gitlab.redox-os.org/redox-os/gcc;
@@ -281,7 +277,6 @@ in {
     enableSharedLibraries = false;
     enablePolly = false;
   } else super.llvm) (attrs: rec {
-    akjdhasd = true;
     src = self.fetchFromGitLab {
       domain = "gitlab.redox-os.org";
       owner = "redox-os";
@@ -306,7 +301,7 @@ in {
         "-DCMAKE_CXX_FLAGS=--std=gnu++11"
         "-DCMAKE_EXE_LINKER_FLAGS=-static"
         # "-DCMAKE_INSTALL_PREFIX=/"
-        "-DCMAKE_SYSTEM_NAME=Generic"
+        # "-DCMAKE_SYSTEM_NAME=Generic"
         # "-DCROSS_TOOLCHAIN_FLAGS_NATIVE="-DCMAKE_TOOLCHAIN_FILE=$native"
         "-DLLVM_BUILD_BENCHMARKS=Off"
         "-DLLVM_BUILD_EXAMPLES=Off"
@@ -490,6 +485,34 @@ in {
   #   ]) attrs.configureFlags;
   # });
 
+  ion = with self; rustPlatform.buildRustPackage rec {
+    pname = "ion";
+    version = "unstable-2020-03-22";
+
+    RUSTC_BOOTSTRAP = 1;
+    src = self.fetchFromGitLab {
+      domain = "gitlab.redox-os.org";
+      owner = "redox-os";
+      repo = "ion";
+      rev = "63d1bf76b6dc27ec9fab80274926738688b6d03e";
+      sha256 = "1rp4daf0k2xydb1dayy1xhbjrqwqix3hbd4vzicmdgcwm12qdxkv";
+    };
+
+    cargoSha256 = "17pc4v66pvdyxmm9dfgdjyam2549x601l7rflyjaaqr0y58ba9iy";
+
+    meta = with stdenv.lib; {
+      description = "Modern system shell with simple (and powerful) syntax";
+      homepage = "https://gitlab.redox-os.org/redox-os/ion";
+      license = licenses.mit;
+      maintainers = with maintainers; [ dywedir ];
+      platforms = platforms.all;
+    };
+
+    passthru = {
+      shellPath = "/bin/ion";
+    };
+  };
+
   ########## NEW REDOX PACKAGES (REDOX) ##########
 
   orbital = self.callPackage ../pkgs/orbital {};
@@ -499,6 +522,7 @@ in {
   # redoxiso = self.callPackage ../pkgs/redoxiso {};
   redoxer  = self.callPackage ../pkgs/redoxer {};
   redoxfs  = self.callPackage ../pkgs/redoxfs {};
+  redoxiso  = self.callPackage ../pkgs/redoxiso {};
 
   ########## NEW REDOX PACKAGES (FOR REDOX ISO BUILDING) ##########
 
@@ -509,11 +533,15 @@ in {
   in {
     drivers   = self.callPackage ../pkgs/redox-drivers {};
     init      = self.callPackage ../pkgs/redox-init {};
-    # installer = self.callPackage ../pkgs/redox-installer {};
+    ipcd      = self.callPackage ../pkgs/redox-ipcd {};
+    logd      = self.callPackage ../pkgs/redox-logd {};
     nulld     = self.callPackage ../pkgs/redox-nulld {};
+    ptyd      = self.callPackage ../pkgs/redox-ptyd {};
     ramfs     = self.callPackage ../pkgs/redox-ramfs {};
     randd     = self.callPackage ../pkgs/redox-randd {};
+    zerod     = self.callPackage ../pkgs/redox-zerod {};
 
     liborbital = self.callPackage ../pkgs/redox-liborbital {};
+    installer = self.callPackage ../pkgs/redox-installer {};
   };
 }

@@ -21,7 +21,14 @@ rustPlatform.buildRustPackage rec {
 
   # cargoBuildFlags = [ "-C lto" ];
 
+  postInstall = ''
+    mkdir -p $out/include
+    cp include/orbital.h $out/include/
+  '';
+
   RUSTC_BOOTSTRAP = 1;
+
+  outputs = [ "out" "dev" ];
 
   meta = with stdenv.lib; {
     homepage    = "https://gitlab.redox-os.org/redox-os/randd";

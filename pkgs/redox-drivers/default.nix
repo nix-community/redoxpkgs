@@ -27,6 +27,19 @@ rustPlatform.buildRustPackage rec {
   #   ./fix-Cargo.lock.patch
   # ];
 
+  outputs = [ "out" "dev" ];
+
+  postInstall = ''
+    mkdir -p $out/etc/pcid
+    cp initfs.toml $out/etc/pcid/initfs.toml
+
+    mkdir -p $out/etc/pcid.d
+    for conf in `find . -maxdepth 2 -type f -name 'config.toml'`; do
+        driver=$(echo $conf | cut -d '/' -f2)
+        cp $conf $out/etc/pcid.d/$driver.toml
+    done
+  '';
+
   RUSTC_BOOTSTRAP = 1;
 
   meta = with stdenv.lib; {
