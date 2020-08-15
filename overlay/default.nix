@@ -1,3 +1,5 @@
+nixpkgsSrc:
+
 self: super:
 let
   whenHost = pkg: fix:
@@ -582,6 +584,45 @@ in
           cp -r ${self.lib.escapeShellArg x.path} ${self.lib.escapeShellArg x.name}
       '') entries}
   '';
+
+  # storeTrees = pkgs: let
+  #   paths = self.lib.pipe pkgs [
+  #     (x: self.closureInfo { rootPaths = x; })
+  #     (x: x + /store-paths)
+  #     (x: builtins.readFile x)
+  #     (x: self.lib.removeSuffix "\n" x)
+  #     (x: self.lib.splitString "\n" x)
+  #     (x: self.lib.unique x)
+  #     (x: map (v: { relative = self.lib.removePrefix "/" v; absolute = v;}) x)
+  #   ];
+  # in self.runCommandLocal "store-trees" {}(''
+  #   mkdir -p $out/nix/store/
+  #   mkdir -p $out/bin/
+  # '' + builtins.concatStringsSep "\n" (builtins.map (path: ''
+  #   ls ${path.absolute}
+  #   cp -r ${path.absolute} $out/${path.relative}
+  #   cp ${path.absolute}/bin/* $out/bin/ || true
+  #   ls $out
+  # '') paths));
+
+  storeTrees = bash: pkgsOrig: let
+    pkgs = pkgsOrig ++ [ bash ];
+    tarballDir = import (nixpkgsSrc + "/nixos/lib/make-system-tarball.nix") {
+      inherit (self.buildPackages) stdenv closureInfo pixz;
+      contents = [];
+      storeContents = map (v: { object = v; symlink = "none"; }) pkgs;
+    };
+  in self.runCommandLocal "store-trees" {} (''
+    tar -xf ${tarballDir}/tarball/*.tar.xz -C .
+    mkdir -p $out/bin
+    cp -r nix $out
+  '' + builtins.concatStringsSep "\n" (builtins.map (pkg: ''
+    for bin in ${pkg}/bin/*; do
+      ln -s $bin $out/bin/$(basename $bin)
+    done
+  '') pkgs));
+
+  # exec -a "$0" $(where gcc) "$@"
 
   ########## NEW REDOX PACKAGES (FOR REDOX ISO BUILDING) ##########
 

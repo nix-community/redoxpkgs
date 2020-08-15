@@ -1,4 +1,5 @@
-{ callPackage, mergeTrees, farmTrees
+{ callPackage, mergeTrees, farmTrees, storeTrees
+, pkgsCross
 , redoxPkgs
 , ion
 , relibc
@@ -57,4 +58,7 @@ mergeTrees "redox-rootfs" (with redoxPkgs; [
       '';
     }
   ])
+  (storeTrees pkgsCross.x86_64-unknown-redox.bash (with pkgsCross.x86_64-unknown-redox; [
+    cowsay
+  ]))
 ])
