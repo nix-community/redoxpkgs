@@ -539,6 +539,7 @@ in {
     ptyd      = self.callPackage ../pkgs/redox-ptyd {};
     ramfs     = self.callPackage ../pkgs/redox-ramfs {};
     randd     = self.callPackage ../pkgs/redox-randd {};
+    userutils = self.callPackage ../pkgs/redox-userutils {};
     zerod     = self.callPackage ../pkgs/redox-zerod {};
 
     liborbital = self.callPackage ../pkgs/redox-liborbital {};

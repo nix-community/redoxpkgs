@@ -14,7 +14,7 @@ let
   ];
 
   userPkgs = with redoxPkgs; [
-    drivers ion ipcd logd ptyd relibc
+    drivers ion ipcd logd ptyd relibc userutils
   ];
 
   install = pkgs: dest: ''
@@ -113,16 +113,15 @@ in rustPlatform.buildRustPackage rec {
     echo "vsad..."
     vesad T T G
     echo "display..."
+    # stdio display:1
     echo "ps2d..."
     ps2d us
     echo "ramfs..."
     ramfs logging
-    echo "reading pcid initfs config..."
-    cat /etc/pcid/initfs.toml
     echo "pcid..."
     pcid /etc/pcid/initfs.toml
-    echo "Hello, world"
-    echo \$REDOXFS_UUID
+    # echo "Hello, world"
+    # echo \$REDOXFS_UUID
     redoxfs --uuid \$REDOXFS_UUID file \$REDOXFS_BLOCK
     echo "Okay, we are mounted now, I think"
     cd file:
@@ -130,9 +129,10 @@ in rustPlatform.buildRustPackage rec {
     run.d /etc/init.d
     EOF
 
-    # stdio display:1
-
     ${install initfsPkgs "build/initfs"}
+
+    chmod +rw -R build/initfs/etc/pcid.d/
+    rm -rf build/initfs/etc/pcid.d/
 
     tree build/initfs
 
@@ -147,6 +147,8 @@ in rustPlatform.buildRustPackage rec {
   postBuild = ''
     echo $releaseDir
     ls -lah target/*
+
+    find . -name gen.rs -exec cat {} \;
   '';
 
   postInstall = ''
@@ -182,8 +184,9 @@ in rustPlatform.buildRustPackage rec {
     pcid /etc/pcid.d/
     EOF
 
+    # getty display:2/activate
+
     cat << EOF > build/filesystem/etc/init.d/30_console
-    getty display:2/activate
     getty debug: -J
     EOF
 
@@ -343,36 +346,36 @@ in rustPlatform.buildRustPackage rec {
 
 /*
 
-# mkdir -p build
+mkdir -p build
 
-# export REDOXER_TOOLCHAIN="/home/ajanse/redox/redox-nix/redox/prefix/x86_64-unknown-redox/relibc-install"
+export REDOXER_TOOLCHAIN="/home/ajanse/redox/redox-nix/redox/prefix/x86_64-unknown-redox/relibc-install"
 
-# nasm -f bin -o build/bootloader -D ARCH_x86_64 -ibootloader/x86_64/ bootloader/x86_64/disk.asm
+nasm -f bin -o build/bootloader -D ARCH_x86_64 -ibootloader/x86_64/ bootloader/x86_64/disk.asm
 
-# mkdir -p build/initfs
+mkdir -p build/initfs
 
-# redox_installer --cookbook=cookbook -c initfs.toml build/initfs/
-# touch build/initfs.tag
+redox_installer --cookbook=cookbook -c initfs.toml build/initfs/
+touch build/initfs.tag
 
-# cd kernel
+cd kernel
 
-# export INITFS_FOLDER=${./build/initfs} && \\
-# ${redox-binary-toolchain}/bin/xargo rustc --lib --target x86_64-unknown-none --release -- -C soft-float -C debuginfo=2 -C lto --emit link=../build/libkernel.a
+export INITFS_FOLDER=${./build/initfs} && \\
+${redox-binary-toolchain}/bin/xargo rustc --lib --target x86_64-unknown-none --release -- -C soft-float -C debuginfo=2 -C lto --emit link=../build/libkernel.a
 
-# x86_64-unknown-redox-ld --gc-sections -z max-page-size=0x1000 -T kernel/linkers/x86_64.ld -o build/kernel build/libkernel.a && \
-# x86_64-unknown-redox-objcopy --only-keep-debug build/kernel build/kernel.sym && \
-# x86_64-unknown-redox-objcopy --strip-debug build/kernel
+x86_64-unknown-redox-ld --gc-sections -z max-page-size=0x1000 -T kernel/linkers/x86_64.ld -o build/kernel build/libkernel.a && \
+x86_64-unknown-redox-objcopy --only-keep-debug build/kernel build/kernel.sym && \
+x86_64-unknown-redox-objcopy --strip-debug build/kernel
 
-# cargo build --manifest-path redoxfs/Cargo.toml --release
+cargo build --manifest-path redoxfs/Cargo.toml --release
 
-# dd if=/dev/zero of=build/filesystem.bin.partial bs=1048576 count="256"
+dd if=/dev/zero of=build/filesystem.bin.partial bs=1048576 count="256"
 
-# cargo run --manifest-path redoxfs/Cargo.toml --release --bin redoxfs-mkfs build/filesystem.bin.partial
+cargo run --manifest-path redoxfs/Cargo.toml --release --bin redoxfs-mkfs build/filesystem.bin.partial
 
-# mkdir -p build/filesystem/
-# redoxfs/target/release/redoxfs build/filesystem.bin.partial build/filesystem/
-# sleep 2
-# pgrep redoxfs
+mkdir -p build/filesystem/
+redoxfs/target/release/redoxfs build/filesystem.bin.partial build/filesystem/
+sleep 2
+pgrep redoxfs
 
 cp filesystem.toml build/filesystem/filesystem.toml
 cp build/bootloader build/filesystem/bootloader
