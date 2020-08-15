@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-ptyd";
+  pname = "redox-ptyd";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -26,7 +26,7 @@ rustPlatform.buildRustPackage rec {
   outputs = [ "out" "dev" ];
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/ptyd";
+    homepage = "https://gitlab.redox-os.org/redox-os/ptyd";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

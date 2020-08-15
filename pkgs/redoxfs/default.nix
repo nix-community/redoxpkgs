@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage ({
-  pname   = "redoxfs";
+  pname = "redoxfs";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -21,11 +21,13 @@ rustPlatform.buildRustPackage ({
   doCheck = false;
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/redoxfs";
+    homepage = "https://gitlab.redox-os.org/redox-os/redoxfs";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.linux ++ platforms.redox;
   };
-} // (if (!stdenv.hostPlatform.isRedox) then {
-  propagatedBuildInputs = [ fuse ];
-  PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
-} else {}))
+} // (
+  if (!stdenv.hostPlatform.isRedox) then {
+    propagatedBuildInputs = [ fuse ];
+    PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
+  } else { }
+))

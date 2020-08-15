@@ -1,5 +1,4 @@
 { stdenv, buildPackages, fetchurl, lib, makeRustPlatform }:
-
 let
   rpath = lib.makeLibraryPath [
     buildPackages.stdenv.cc.libc
@@ -7,7 +6,7 @@ let
   ];
   bootstrapCrossRust = stdenv.mkDerivation {
     name = "binary-redox-rust";
-    
+
     src = fetchurl {
       name = "rust-install.tar.gz";
       url = "https://gateway.pinata.cloud/ipfs/QmNp6fPTjPA6LnCYvW1UmbAHcPpU7tqZhstfSpSXMJCRwp";
@@ -32,7 +31,8 @@ let
 
     meta.platforms = with stdenv.lib; platforms.redox ++ platforms.linux;
   };
-in buildPackages.makeRustPlatform {
+in
+buildPackages.makeRustPlatform {
   rustc = bootstrapCrossRust;
   cargo = bootstrapCrossRust;
 }

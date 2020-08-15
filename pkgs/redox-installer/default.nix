@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "installer";
+  pname = "installer";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -22,7 +22,7 @@ rustPlatform.buildRustPackage rec {
   RUSTC_BOOTSTRAP = 1;
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/redoxfs";
+    homepage = "https://gitlab.redox-os.org/redox-os/redoxfs";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.linux;
   };

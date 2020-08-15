@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-nulld";
+  pname = "redox-nulld";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -24,7 +24,7 @@ rustPlatform.buildRustPackage rec {
   outputs = [ "out" "dev" ];
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/ramfs";
+    homepage = "https://gitlab.redox-os.org/redox-os/ramfs";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

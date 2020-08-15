@@ -5,8 +5,7 @@ let
   });
   overlay = import ./overlay;
 in
-
 with (nixpkgs {
-    overlays = [ overlay ];
-    config.allowUnsupportedSystem = true;
+  overlays = [ overlay ];
+  config.allowUnsupportedSystem = true;
 }); pkgs

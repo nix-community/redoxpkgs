@@ -2,7 +2,7 @@
 
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-userutils";
+  pname = "redox-userutils";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -13,21 +13,14 @@ rustPlatform.buildRustPackage rec {
     sha256 = "1bap1bnzgpwk8q09frlvyhwzr422xw8pnqwfql7x8341d7ykh748";
   };
 
-  # nativeBuildInputs = [ pkgconfig ];
-  # propagatedBuildInputs = [ fuse ];
-
-  # PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
-
   cargoSha256 = "0h0fjjbjp2p6vbzby5v7hz9xdh1rah0apg38cchs6g1qyp9lr83i";
-
-  # cargoBuildFlags = [ "-C lto" ];
 
   outputs = [ "out" "dev" ];
 
   RUSTC_BOOTSTRAP = 1;
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/userutils";
+    homepage = "https://gitlab.redox-os.org/redox-os/userutils";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig, SDL2 }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-drivers";
+  pname = "redox-drivers";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -34,7 +34,7 @@ rustPlatform.buildRustPackage rec {
   RUSTC_BOOTSTRAP = 1;
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/drivers";
+    homepage = "https://gitlab.redox-os.org/redox-os/drivers";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

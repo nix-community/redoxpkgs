@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-logd";
+  pname = "redox-logd";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -19,7 +19,7 @@ rustPlatform.buildRustPackage rec {
   outputs = [ "out" "dev" ];
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/logd";
+    homepage = "https://gitlab.redox-os.org/redox-os/logd";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

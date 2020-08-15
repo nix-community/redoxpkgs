@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-liborbital";
+  pname = "redox-liborbital";
   version = "latest";
 
   src = fetchFromGitLab {
@@ -31,7 +31,7 @@ rustPlatform.buildRustPackage rec {
   outputs = [ "out" "dev" ];
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/randd";
+    homepage = "https://gitlab.redox-os.org/redox-os/randd";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };
