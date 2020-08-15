@@ -1,4 +1,4 @@
-{ stdenv, ion, breakpointHook, redoxPkgs, utillinux, fetchFromGitLab, relibc, redoxfs, fetchgit, rustPlatform, fuse, pkgconfig, nasm, tree }:
+{ stdenv, rustPlatform, ion, gnutar, breakpointHook, redoxPkgs, utillinux, fetchFromGitHub, fetchFromGitLab, relibc, redoxfs, fetchgit, fuse, pkgconfig, nasm, tree }:
 
 let
   bootloader = fetchFromGitLab {
@@ -25,9 +25,52 @@ let
     ${builtins.concatStringsSep "\n" (builtins.map (v: "install ${v}") pkgs)}
   '';
 
+  # cargoRustSrc = stdenv.mkDerivation {
+  #   name = "rust-src";
+  #   src = rustPlatform.rustcSrc;
+  #   preferLocal = true;
+  #   dontUnpack = true;
+  #   installPhase = ''
+  #     mkdir -p $out/src
+  #     cp -r $src/* $out/src
+  #   '';
+  # };
+
+  rustcWithSrc = stdenv.mkDerivation {
+    name = "rust-src";
+    src = rustPlatform.rust.rustc;
+    preferLocalBuild = true;
+    phases = [ "installPhase" ];
+    nativeBuildInputs = [ gnutar ];
+    installPhase = ''
+      tar xf ${rustPlatform.rust.rustc.src} -C .
+      mkdir -p $out/lib/rustlib/src/
+      mv ./rustc-* $out/lib/rustlib/src/rust
+      cp -R $src/* $out
+    '';
+  };
+
+  buildRustPackage' = rustPlatform.buildRustPackage.override {
+    inherit (rustPlatform.rust) cargo;
+    rustc = rustcWithSrc;
+  };
+
+  # moz_overlay = import (builtins.fetchTarball https://github.com/mozilla/nixpkgs-mozilla/archive/master.tar.gz);
+  # nixpkgs' = import <nixpkgs> { overlays = [ moz_overlay ]; };
+  # rustChannel = nixpkgs'.rustChannelOf { date = "2019-12-18"; channel = "nightly"; };
+  # rustc = rustChannel.rust.override { extensions = [ "rust-src" "llvm-tools-preview" ]; };
+  # cargo = rustChannel.cargo;
+  # rustPlatform = nixpkgs'.rust.makeRustPlatform { inherit rustc cargo; };
+  # buildRustPackage = rustPlatform.buildRustPackage;
+  # cargo-xbuild = nixpkgs'.cargo-xbuild.override { inherit rustPlatform; };
+
+# RUSTFLAGS="-Clinker-plugin-lto -Cembed-bitcode=yes" CARGO=$(which cargo) /home/ajanse/redox/cargo-sysroot/target/debug/cargo-sysroot sysroot --target /nix/store/dk55xqrgyavw1gizs9b07p71j7przki0-x86_64-unknown-none.json --rust-src-dir $PWD/../rust/src/
+
 in rustPlatform.buildRustPackage rec {
   pname   = "redox-iso";
   version = "latest";
+
+  # targetJson = "./targets/x86_64-unknown-none.json";
 
   dontStrip = true;
 
@@ -40,26 +83,43 @@ in rustPlatform.buildRustPackage rec {
   src = /home/ajanse/redox/redox/kernel;
 
   buildType = "debug";
-  RUSTFLAGS = "-C debuginfo=2 -C lto=thin -C soft-float";
+  RUSTFLAGS = "-C debuginfo=2 -C soft-float -C lto=thin --sysroot=${/home/ajanse/redox/redox/kernel/target/sysroot}";
+  cargoBuildFlags = [ "--verbose" ];
+  target = /home/ajanse/redox/redox/kernel/targets/x86_64-unknown-none.json;
+  TARGET = /home/ajanse/redox/redox/kernel/targets/x86_64-unknown-none.json;
+
+  # __CARGO_TESTS_ONLY_SRC_ROOT = "${rustcWithSrc}/lib/rustlib/src/rust";
 
   nativeBuildInputs = [
     nasm redoxfs tree utillinux
   ];
 
   patchPhase = ''
+    echo "###################"
+    rustc --print=sysroot
+
     mkdir -p build/initfs/{etc,bin,tmp}
 
     cat << EOF > build/initfs/etc/init.rc
-    echo "Hello. I start things."
+    echo "Hello. I start things..."
     export PATH /bin
     export TMPDIR /tmp
+    echo "nulld..."
     nulld
+    echo "zerod..."
     zerod
+    echo "randd..."
     randd
+    echo "vsad..."
     vesad T T G
-    stdio display:1
+    echo "display..."
+    echo "ps2d..."
     ps2d us
+    echo "ramfs..."
     ramfs logging
+    echo "reading pcid initfs config..."
+    cat /etc/pcid/initfs.toml
+    echo "pcid..."
     pcid /etc/pcid/initfs.toml
     echo "Hello, world"
     echo \$REDOXFS_UUID
@@ -70,6 +130,8 @@ in rustPlatform.buildRustPackage rec {
     run.d /etc/init.d
     EOF
 
+    # stdio display:1
+
     ${install initfsPkgs "build/initfs"}
 
     tree build/initfs
@@ -77,6 +139,14 @@ in rustPlatform.buildRustPackage rec {
     nasm -f bin -o build/bootloader -D ARCH_x86_64 -i${bootloader}/x86_64/ ${bootloader}/x86_64/disk.asm
 
     export INITFS_FOLDER=$PWD/build/initfs
+    # export RUST_TARGET_PATH=$(pwd)
+
+    echo $target
+  '';
+
+  postBuild = ''
+    echo $releaseDir
+    ls -lah target/*
   '';
 
   postInstall = ''
@@ -177,6 +247,47 @@ in rustPlatform.buildRustPackage rec {
   # INITFS_FOLDER = "$src/build/initfs";
   # cargoFlags = [ "--verbose" ];
 
+
+  /*
+
+
+    [dependencies.compiler_builtins]
+    version = "=0.1.31"
+    [dependencies.getopts]
+    version = "0.2.21"
+    [dependencies.libc]
+    version = "=0.2.69"
+    [dependencies.unicode-width]
+    version = "=0.1.6"
+    [dependencies.cfg-if]
+    version = "0.1.10"
+    [dependencies.backtrace]
+    version = "=0.3.46"
+    [dependencies.hashbrown]
+    version = "=0.6.2"
+    [dependencies.hermit-abi]
+    version = "=0.1.13"
+    [dependencies.dlmalloc]
+    version = "=0.1"
+    [dependencies.fortanix-sgx-abi]
+    version = "=0.3.2"
+    [dependencies.wasi]
+    version = "=0.9.0"
+    [dependencies.cc]
+    version = "=1.0.54"
+
+
+    [patch."]
+    core = { path = 'my/local/core' }
+    */
+
+  cargoUpdateHook = ''
+    cat << EOF >> Cargo.toml
+    EOF
+  '';
+
+
+
   cargoSha256 = "1w3hmjhy8fnkh419j2617knjixwjll44wl7c2vpr57nviwry8lrh";
 
   RUSTC_BOOTSTRAP = 1;
@@ -184,7 +295,7 @@ in rustPlatform.buildRustPackage rec {
   meta = with stdenv.lib; {
     homepage    = "https://gitlab.redox-os.org/redox-os/kernel";
     maintainers = with maintainers; [ aaronjanse ];
-    platforms = platforms.redox;
+    platforms = platforms.redox ++ platforms.linux;
   };
 }
 
