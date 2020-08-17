@@ -7,7 +7,7 @@ in runCommandLocal "redox-vmdisk" {
   nativeBuildInputs = [ nasm redoxfs utillinux ];
 } ''
   mkdir $out
-  fallocate -l 1G filesystem.bin
+  fallocate -l 500M filesystem.bin
   redoxfs-fill filesystem.bin ${rootfs}
   nasm -f bin -o $out/harddrive.bin \
     -D ARCH_x86_64 -D FILESYSTEM=filesystem.bin \
