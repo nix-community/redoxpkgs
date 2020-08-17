@@ -6,10 +6,10 @@ rustPlatform.buildRustPackage ({
 
   src = fetchFromGitLab {
     domain = "gitlab.redox-os.org";
-    owner = "redox-os";
+    owner = "aaronjanse";
     repo = "redoxfs";
-    rev = "f1b88c38c0a9b6bf9e24f82397a8a9505c9a2df2";
-    sha256 = "0s0ya4vig2kn86xbq6fb6mylajhx75r24hs07xgmdxzsqqn1yqxa";
+    rev = "2b8d25f9130d1ad66f2da7012d48a1407f99b146";
+    sha256 = "1fnq3c107vg2fpn06hm7kpqhij0k4qq1w86axk3z00x1yqdyxbbf";
   };
 
   nativeBuildInputs = [ pkgconfig ];

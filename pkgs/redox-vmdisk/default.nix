@@ -4,11 +4,12 @@ let
   bootloader = callPackage ./bootloader.nix {};
   rootfs = callPackage ./rootfs.nix {};
 in runCommandLocal "redox-vmdisk" {
-  nativeBuildInputs = [ nasm redoxfs ];
+  nativeBuildInputs = [ nasm redoxfs utillinux ];
 } ''
   mkdir $out
-  redoxfs-ar $out/filesystem.bin ${rootfs}
+  fallocate -l 1G filesystem.bin
+  redoxfs-fill filesystem.bin ${rootfs}
   nasm -f bin -o $out/harddrive.bin \
-    -D ARCH_x86_64 -D FILESYSTEM=$out/filesystem.bin \
+    -D ARCH_x86_64 -D FILESYSTEM=filesystem.bin \
     -i${bootloader.src}/x86_64/ ${bootloader.src}/x86_64/disk.asm
 ''
