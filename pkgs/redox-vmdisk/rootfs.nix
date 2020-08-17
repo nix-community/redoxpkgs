@@ -12,7 +12,7 @@ let
   bootloader = callPackage ./bootloader.nix { };
 
 in
-mergeTrees "redox-rootfs" (with redoxPkgs; [
+mergeTrees "redox-vm-rootfs" (with redoxPkgs; [
   drivers
   ion
   ipcd

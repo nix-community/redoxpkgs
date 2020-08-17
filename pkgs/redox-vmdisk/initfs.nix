@@ -3,7 +3,7 @@
 , redoxfs
 }:
 
-mergeTrees "redox-initfs" (with redoxPkgs; [
+mergeTrees "redox-vm-initfs" (with redoxPkgs; [
   drivers
   init
   nulld
