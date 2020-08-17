@@ -564,6 +564,7 @@ in
   redoxfs = self.callPackage ../pkgs/redoxfs { };
   redoxiso = self.callPackage ../pkgs/redoxiso { };
 
+  redox-vm = self.callPackage ../pkgs/redox-vm { };
   redox-vmdisk = self.callPackage ../pkgs/redox-vmdisk { };
 
   mergeTrees = name: trees: self.runCommandLocal name {} (''
