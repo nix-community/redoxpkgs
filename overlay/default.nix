@@ -619,7 +619,18 @@ in
     cp -r nix $out
   '' + builtins.concatStringsSep "\n" (builtins.map (pkg: ''
     for bin in ${pkg}/bin/*; do
-      ln -s $bin $out/bin/$(basename $bin)
+    SHORT_PATH=$out/bin/$(basename $bin)
+    cat << EOF > $SHORT_PATH
+    #!/bin/ion
+
+    if test \$len(@args) = 1
+      exec $bin
+    else
+      exec $bin @args[1..]
+    end
+    
+    EOF
+    chmod +x $SHORT_PATH
     done
   '') pkgs));
 
