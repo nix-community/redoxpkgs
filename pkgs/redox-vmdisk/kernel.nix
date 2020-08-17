@@ -5,12 +5,12 @@ rustPlatform.buildRustPackage rec {
 
   src = fetchgit {
     url = "https://gitlab.redox-os.org/redox-os/kernel";
-    rev = "895c0c11da8e42a4e2177e69cd318c9db26c166c";
-    sha256 = "17q8bqb2insgdcnalx4wwl3524wxd586ywmps42ypc9ssgmblsys";
+    rev = "0590a71b8759c773cd961680ed9f4c35474bd748";
+    sha256 = "1cdf5bc0b0fjr8k7p8maax8dm2w9i9jz5j64a579yxb4hy7zzhda";
     fetchSubmodules = true;
   };
 
-  cargoSha256 = "08z29g2maq5w2hwfy1pgdrqs4wdn6v8631b1ifndjkahg719wzax";
+  cargoSha256 = "19dim0py5sqg2a0ifjz1q9vzzfzlmw90n4wqlsc9yxc553kla728";
 
   nativeBuildInputs = [ nasm ];
 
