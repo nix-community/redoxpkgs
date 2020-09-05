@@ -2,47 +2,28 @@
 
 Redoxpkgs is an overlay to allow using Nix to cross-compile packages to [Redox](https://redox-os.org).
 
-Usage for example package `hexyl` (note: long build time!)
-```bash
-nix-build . -A pkgsCross.x86_64-unknown-redox.hexyl
+#### Installation
+
+Install [Nix](https://nixos.org/), a declarative build system:
+```
+curl -L https://nixos.org/nix/install | sh
 ```
 
-To build redox-related packages for your system (rather than cross compiling):
-```bash
-nix-build . -A origPkgs.redoxfs
+Install [Cachix](https://cachix.org/), a build cache system:
+```
+nix-env -iA cachix -f https://cachix.org/api/v1/install
 ```
 
-#### Cross-compiled packages
+Enable the [Nix Community](https://nix-community.org/) cache: 
+```
+cachix use nix-community
+```
 
-Known working:
+#### Usage
 
-* `hexyl`
-* `binutils`
-* `bash`
-* `cowsay`
-* `perl`
+To compile `cowsay`:
+```
+nix-build . -A pkgsCross.x86_64-unknown-redox.cowsay
+```
 
-Known kinda working:
-
-* `vim`
-* `python37`
-
-These compile but not yet have been tested:
-
-* `openssl`
-* `xz`
-* `less`
-* `sl`
-* `pipes`
-
-#### Cross-compilers
-
-* `buildPackages.gcc`
-* `buildPackages.rustc`
-
-#### Redox-related packages for local system
-
-These compile but have not yet have been tested:
-
-* `redoxfs`
-* `redoxer`
+You can also try `hexyl` or `sl`.
