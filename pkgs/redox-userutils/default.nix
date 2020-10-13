@@ -17,6 +17,8 @@ rustPlatform.buildRustPackage rec {
 
   outputs = [ "out" "dev" ];
 
+  doCheck = false;
+
   RUSTC_BOOTSTRAP = 1;
 
   meta = with stdenv.lib; {

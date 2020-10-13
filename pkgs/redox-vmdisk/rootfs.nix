@@ -7,7 +7,7 @@
 
 let
   initfs = callPackage ./initfs.nix { };
-  kernel = callPackage ./kernel.nix { inherit initfs; };
+  # kernel = callPackage ./kernel.nix { inherit initfs; };
 
   bootloader = callPackage ./bootloader.nix { };
 
@@ -22,7 +22,7 @@ mergeTrees "redox-vm-rootfs" (with redoxPkgs; [
   userutils
   uutils
   (farmTrees [
-    { name = "kernel"; path = kernel; }
+    { name = "kernel"; path = pkgsCross.x86_64-unknown-redox.redox-kernel; }
     { name = "bootloader"; path = bootloader; }
 
     { name = "home/user"; isDir = true; }

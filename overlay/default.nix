@@ -92,6 +92,10 @@ in
     ];
   });
 
+  git = whenHost super.git (attrs: rec {
+    doCheck = false;
+  });
+
   # gcc6 = whenTarget super.gcc6 (attrs: rec {
   #   src = fetchGit {
   #     url = https://gitlab.redox-os.org/redox-os/gcc;
@@ -566,6 +570,9 @@ in
 
   redox-vm = self.callPackage ../pkgs/redox-vm { };
   redox-vmdisk = self.callPackage ../pkgs/redox-vmdisk { };
+  redox-kernel = self.callPackage ../pkgs/redox-vmdisk/kernel.nix {
+    initfs = self.callPackage ../pkgs/redox-vmdisk/initfs.nix {};
+  };
 
   mergeTrees = name: trees: self.runCommandLocal name {} (''
     mkdir $out

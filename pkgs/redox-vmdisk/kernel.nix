@@ -21,6 +21,8 @@ rustPlatform.buildRustPackage rec {
   RUSTFLAGS = "-C debuginfo=2 -C soft-float -C lto=thin -C embed-bitcode=yes";
   RUSTC_BOOTSTRAP = 1;
 
+  doCheck = false;
+
   outputs = [ "out" "dev" ];
   dontPatchShebangs = true;
   dontStrip = true;

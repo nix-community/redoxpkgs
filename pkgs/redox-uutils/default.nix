@@ -80,6 +80,8 @@ let bins = [
     "--no-default-features --features redox"
   ] ++ map (v: "-p ${v}") bins;
 
+  doCheck = false;
+
   cargoSha256 = "07zbxl4407sca5jqgimvhp74rib3pksg3ml9ym0gcb7i7c3lxp8d";
 
   outputs = [ "out" "dev" ];
