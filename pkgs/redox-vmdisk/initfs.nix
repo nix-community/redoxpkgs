@@ -13,7 +13,7 @@ mergeTrees "redox-vm-initfs" (with redoxPkgs; [
   zerod
   (farmTrees [{
     name = "etc/init.rc";
-    path = builtins.toFile "" ''
+    path = builtins.toFile "init.rc" ''
       export PATH /bin
       export TMPDIR /tmp
       nulld

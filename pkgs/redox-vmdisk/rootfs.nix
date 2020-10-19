@@ -30,7 +30,7 @@ mergeTrees "redox-vm-rootfs" (with redoxPkgs; [
 
     {
       name = "etc/init.d/00_base";
-      path = builtins.toFile "" ''
+      path = builtins.toFile "00_base" ''
         ipcd
         logd
         ptyd
@@ -39,20 +39,20 @@ mergeTrees "redox-vm-rootfs" (with redoxPkgs; [
     }
     {
       name = "etc/init.d/30_console";
-      path = builtins.toFile "" ''
+      path = builtins.toFile "30_console" ''
         getty debug: -J
       '';
     }
     {
       name = "etc/passwd";
-      path = builtins.toFile "" ''
+      path = builtins.toFile "passwd" ''
         root;0;0;root;file:/root;file:/bin/ion
         user;1;1;user;file:/home/user;file:/bin/ion
       '';
     }
     {
       name = "etc/shadow";
-      path = builtins.toFile "" ''
+      path = builtins.toFile "shadow" ''
         root;
         user;
       '';
