@@ -1,0 +1,57 @@
+diff --git a/initfs.toml b/initfs.toml
+index 9d95b91..ff94cc4 100644
+--- a/initfs.toml
++++ b/initfs.toml
+@@ -8,19 +8,19 @@ subclass = 6
+ command = ["ahcid", "$NAME", "$BAR5", "$BARSIZE5", "$IRQ"]
+ 
+ # bgad
+-[[drivers]]
+-name = "QEMU Graphics Array"
+-class = 3
+-vendor = 4660
+-device = 4369
+-command = ["bgad", "$NAME", "$BAR0"]
++# [[drivers]]
++# name = "QEMU Graphics Array"
++# class = 3
++# vendor = 4660
++# device = 4369
++# command = ["bgad", "$NAME", "$BAR0"]
+ 
+-[[drivers]]
+-name = "VirtualBox Graphics Array"
+-class = 3
+-vendor = 33006
+-device = 48879
+-command = ["bgad", "$NAME", "$BAR0"]
++# [[drivers]]
++# name = "VirtualBox Graphics Array"
++# class = 3
++# vendor = 33006
++# device = 48879
++# command = ["bgad", "$NAME", "$BAR0"]
+ 
+ # nvmed
+ [[drivers]]
+@@ -30,13 +30,13 @@ subclass = 8
+ command = ["nvmed", "$NAME", "$BAR0", "$BARSIZE0", "$IRQ"]
+ use_channel = true
+ 
+-# vboxd
+-[[drivers]]
+-name = "VirtualBox Guest Device"
+-class = 8
+-vendor = 33006
+-device = 51966
+-command = ["vboxd", "$NAME", "$BAR0", "$BAR1", "$IRQ"]
++# # vboxd
++# [[drivers]]
++# name = "VirtualBox Guest Device"
++# class = 8
++# vendor = 33006
++# device = 51966
++# command = ["vboxd", "$NAME", "$BAR0", "$BAR1", "$IRQ"]
+ 
+ # xhcid
+ [[drivers]]

@@ -1,15 +1,15 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redox-init";
+  pname = "redox-ramfs";
   version = "latest";
 
   src = fetchFromGitLab {
     domain = "gitlab.redox-os.org";
     owner = "redox-os";
-    repo = "ramgs";
-    rev = "ec847e309dfda3426a9b6292bac9ceaf18bc712e";
-    sha256 = "000wm8kczdg6dzrladlvymsa9m501wl2q08irhabyvzafn98m1j8";
+    repo = "ramfs";
+    rev = "4343ac6b5491f479067d94255fc3555fd9d0b924";
+    sha256 = "1xraa4fyzf8qy4jz249ip0d16vdg8k5whlr16hjl3kdc03xdw937";
   };
 
   # nativeBuildInputs = [ pkgconfig ];
@@ -17,14 +17,16 @@ rustPlatform.buildRustPackage rec {
 
   # PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
 
-  cargoSha256 = "00nbpizqq0hdj3zlbgjqkq42a5iv7kpzpxaabarnhlj8hrd7137z";
+  cargoSha256 = "1q6bjx10jjh062hp2vcm2zdij89xs5n6yrlhpv34mi45kp0s11zh";
 
-  cargoBuildFlags = [ "-C lto" ];
+  # cargoBuildFlags = [ "-C lto" ];
 
   RUSTC_BOOTSTRAP = 1;
 
+  outputs = [ "out" "dev" ];
+
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/randd";
+    homepage = "https://gitlab.redox-os.org/redox-os/randd";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

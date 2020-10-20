@@ -1,29 +1,33 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
-rustPlatform.buildRustPackage rec {
-  pname   = "redoxfs";
-  version = "0.4.0";
+rustPlatform.buildRustPackage ({
+  pname = "redoxfs";
+  version = "latest";
 
   src = fetchFromGitLab {
     domain = "gitlab.redox-os.org";
-    owner = "redox-os";
+    owner = "aaronjanse";
     repo = "redoxfs";
-    rev = "0068a6d4980e83e36c2f08fd64e4809da5ce136c";
-    sha256 = "000wm8kczdg6dzrladlvymsa9m501wl2q08irhabyvzafn98m1j8";
+    rev = "2b8d25f9130d1ad66f2da7012d48a1407f99b146";
+    sha256 = "1fnq3c107vg2fpn06hm7kpqhij0k4qq1w86axk3z00x1yqdyxbbf";
   };
 
   nativeBuildInputs = [ pkgconfig ];
-  propagatedBuildInputs = [ fuse ];
 
-  PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
-
-  cargoSha256 = "1wpv8mamv0f5rc5j3z1xc2sfvd3zh4zm11kwi4my2klfw3x37rlp";
+  cargoSha256 = "17aq6mc6f22p1ba9jgspzpl0xgac4n9h6m1mix0z28avfachislb";
 
   RUSTC_BOOTSTRAP = 1;
 
+  doCheck = false;
+
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/redoxfs";
+    homepage = "https://gitlab.redox-os.org/redox-os/redoxfs";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.linux ++ platforms.redox;
   };
-}
+} // (
+  if (!stdenv.hostPlatform.isRedox) then {
+    propagatedBuildInputs = [ fuse ];
+    PKG_CONFIG_PATH = "${fuse}/lib/pkgconfig";
+  } else { }
+))

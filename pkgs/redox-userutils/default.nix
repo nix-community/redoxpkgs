@@ -1,25 +1,28 @@
 { stdenv, fetchFromGitLab, rustPlatform, fuse, pkgconfig }:
 
+
 rustPlatform.buildRustPackage rec {
-  pname = "redox-randd";
+  pname = "redox-userutils";
   version = "latest";
 
   src = fetchFromGitLab {
     domain = "gitlab.redox-os.org";
     owner = "redox-os";
-    repo = "randd";
-    rev = "2f0ad188dd3e0393567fa91567bf1989465507c0";
-    sha256 = "00nlfbx9gbmmpnd24kiyl5213zhsxq4kl3zfh9lnyx9qy1xdhdjd";
+    repo = "userutils";
+    rev = "c33a46452250c2f577f8c60a705533e891c5d139";
+    sha256 = "1bap1bnzgpwk8q09frlvyhwzr422xw8pnqwfql7x8341d7ykh748";
   };
 
-  cargoSha256 = "03j4wvpv67zbng8yhxlq5iyh452yhkl4b8z15975a7lprxj40pwj";
-
-  RUSTC_BOOTSTRAP = 1;
+  cargoSha256 = "0h0fjjbjp2p6vbzby5v7hz9xdh1rah0apg38cchs6g1qyp9lr83i";
 
   outputs = [ "out" "dev" ];
 
+  doCheck = false;
+
+  RUSTC_BOOTSTRAP = 1;
+
   meta = with stdenv.lib; {
-    homepage = "https://gitlab.redox-os.org/redox-os/randd";
+    homepage = "https://gitlab.redox-os.org/redox-os/userutils";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.redox;
   };

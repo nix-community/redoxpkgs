@@ -1,7 +1,7 @@
 { stdenv, lib, fetchFromGitLab, rustPlatform, fuse, pkgconfig, redoxfs, makeWrapper }:
 
 rustPlatform.buildRustPackage rec {
-  pname   = "redoxer";
+  pname = "redoxer";
   version = "0.2.19";
 
   src = fetchFromGitLab {
@@ -27,7 +27,7 @@ rustPlatform.buildRustPackage rec {
   '';
 
   meta = with stdenv.lib; {
-    homepage    = "https://gitlab.redox-os.org/redox-os/redoxer";
+    homepage = "https://gitlab.redox-os.org/redox-os/redoxer";
     maintainers = with maintainers; [ aaronjanse ];
     platforms = platforms.linux;
   };
