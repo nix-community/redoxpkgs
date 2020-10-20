@@ -92,7 +92,7 @@ in
     ];
   });
 
-  git = whenHost super.git (attrs: rec {
+  git = super.git.overrideAttrs (attrs: rec {
     doCheck = false;
   });
 
@@ -534,7 +534,7 @@ in
     version = "unstable-2020-03-22";
 
     RUSTC_BOOTSTRAP = 1;
-    src = self.fetchFromGitLab {
+    src = super.buildPackages.fetchFromGitLab {
       domain = "gitlab.redox-os.org";
       owner = "redox-os";
       repo = "ion";
