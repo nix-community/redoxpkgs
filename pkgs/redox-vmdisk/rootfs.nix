@@ -11,17 +11,17 @@ let
 
   bootloader = callPackage ./bootloader.nix { };
 
-in
-mergeTrees "redox-vm-rootfs" (with redoxPkgs; [
-  drivers
-  ion
-  ipcd
-  logd
-  ptyd
-  relibc
-  userutils
-  uutils
-  (farmTrees [
+  defaultPackages = with redoxPkgs; [
+    drivers
+    ion
+    ipcd
+    logd
+    ptyd
+    relibc
+    userutils
+    uutils
+  ];
+  defaultFs = [
     { name = "kernel"; path = pkgsCross.x86_64-unknown-redox.redox-kernel; }
     { name = "bootloader"; path = bootloader; }
 
@@ -57,8 +57,26 @@ mergeTrees "redox-vm-rootfs" (with redoxPkgs; [
         user;
       '';
     }
-  ])
-  (storeTrees pkgsCross.x86_64-unknown-redox.bash (with pkgsCross.x86_64-unknown-redox; [
-    cowsay
-  ]))
-])
+  ];
+
+  buildRootFS = { pkgs ? defaultPackages, fs ? defaultFs }:
+    mergeTrees "redox-vm-rootfs" (pkgs ++ [ (farmTrees fs) ]);
+
+  example = buildRootFS {
+    pkgs = defaultPackages ++ [
+      (storeTrees pkgsCross.x86_64-unknown-redox.bash (with pkgsCross.x86_64-unknown-redox; [
+        cowsay
+      ]))
+    ];
+  };
+in
+
+example // {
+  inherit defaultPackages defaultFs;
+
+  customRootFS = buildRootFS;
+
+  withPackages = f: buildRootFS {
+    pkgs = defaultPackages ++ (f redoxPkgs);
+  };
+}

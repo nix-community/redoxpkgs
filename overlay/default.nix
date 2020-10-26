@@ -1,5 +1,3 @@
-nixpkgsSrc:
-
 self: super:
 let
   whenHost = pkg: fix:
@@ -570,6 +568,7 @@ in
 
   redox-vm = self.callPackage ../pkgs/redox-vm { };
   redox-vmdisk = self.callPackage ../pkgs/redox-vmdisk { };
+  redox-rootfs = self.callPackage ../pkgs/redox-vmdisk/rootfs.nix { };
   redox-kernel = self.callPackage ../pkgs/redox-vmdisk/kernel.nix {
     initfs = self.callPackage ../pkgs/redox-vmdisk/initfs.nix {};
   };
@@ -615,7 +614,7 @@ in
 
   storeTrees = bash: pkgsOrig: let
     pkgs = pkgsOrig ++ [ bash ];
-    tarballDir = import (nixpkgsSrc + "/nixos/lib/make-system-tarball.nix") {
+    tarballDir = import (self.path + "/nixos/lib/make-system-tarball.nix") {
       inherit (self.buildPackages) stdenv closureInfo pixz;
       contents = [];
       storeContents = map (v: { object = v; symlink = "none"; }) pkgs;
