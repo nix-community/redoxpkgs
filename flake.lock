@@ -1,0 +1,27 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1603165041,
+        "narHash": "sha256-qH75ML6ZJrNW7vRt0wwWgT+Tz8K5GeYeTN/Rl2jOf6Y=",
+        "owner": "aaronjanse",
+        "repo": "nixpkgs",
+        "rev": "a133f31b92aaa055475b904cca144404fb75f925",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aaronjanse",
+        "ref": "redox",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
