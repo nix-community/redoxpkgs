@@ -480,6 +480,16 @@ in
         "--disable-shared"
       ];
     });
+  
+  relibc = super.relibc.overrideAttrs (attrs: {
+    src = super.buildPackages.fetchgit {
+      url = "https://gitlab.redox-os.org/redox-os/relibc/";
+      rev = "07ec3b6591878f23f3c4be80c26cbfc584abfe43";
+      sha256 = "sha256-ztv9uAUVIroZs+9pKx7C2UTn2Tw0RUnaIWRJlUFr/3k=";
+      fetchSubmodules = true;
+    };
+    patches = [ ./relibc/shebang.patch ];
+  });
 
   SDL2 = whenHost
     (
