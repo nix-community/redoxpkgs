@@ -3,7 +3,7 @@ let
 in {
   inherit (pkgs.pkgsCross.x86_64-unknown-redox.buildPackages) gcc rustc;
   inherit (pkgs.pkgsCross.x86_64-unknown-redox)
-     hexyl bash less vim;
+     hexyl bash less vim binutils-unwrapped;
   #   perl cmatrix cowsay
   #   binutils-unwrapped
   #   SDL2 pcre ncurses
